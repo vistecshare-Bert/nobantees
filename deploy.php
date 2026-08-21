@@ -26,19 +26,25 @@ $sha    = preg_replace('/[^a-f0-9]/i', '', $_GET['sha'] ?? '');
 $ref    = $sha ?: 'main';
 $zipUrl = "https://api.github.com/repos/vistecshare-Bert/nobantees/zipball/$ref";
 
-$headers = "User-Agent: NobanteesDeploy/1.0\r\n";
-if ($ghToken) $headers = "Authorization: token $ghToken\r\n" . $headers;
+$curlHeaders = ['User-Agent: NobanteesDeploy/1.0'];
+if ($ghToken) $curlHeaders[] = "Authorization: token $ghToken";
 
-$ctx = stream_context_create(['http' => [
-    'method'          => 'GET',
-    'header'          => $headers,
-    'follow_location' => 1,
-    'timeout'         => 120,
-]]);
-$zipContent = file_get_contents($zipUrl, false, $ctx);
+$ch = curl_init($zipUrl);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_HTTPHEADER     => $curlHeaders,
+    CURLOPT_TIMEOUT        => 120,
+    CURLOPT_SSL_VERIFYPEER => true,
+]);
+$zipContent = curl_exec($ch);
+$curlErr    = curl_error($ch);
+$curlCode   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
 if (!$zipContent || strlen($zipContent) < 1000) {
     http_response_code(500);
-    die(json_encode(['status' => 'error', 'msg' => 'ZIP download failed', 'size' => strlen($zipContent ?: '')]));
+    die(json_encode(['status' => 'error', 'msg' => 'ZIP download failed', 'http_code' => $curlCode, 'curl_error' => $curlErr, 'size' => strlen($zipContent ?: '')]));
 }
 file_put_contents($zip, $zipContent);
 
