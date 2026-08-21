@@ -39,12 +39,18 @@ curl_setopt_array($ch, [
 ]);
 $zipContent = curl_exec($ch);
 $curlErr    = curl_error($ch);
-$curlCode   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curlInfo   = curl_getinfo($ch);
 curl_close($ch);
 
 if (!$zipContent || strlen($zipContent) < 1000) {
     http_response_code(500);
-    die(json_encode(['status' => 'error', 'msg' => 'ZIP download failed', 'http_code' => $curlCode, 'curl_error' => $curlErr, 'size' => strlen($zipContent ?: '')]));
+    die(json_encode([
+        'status'     => 'error',
+        'msg'        => 'ZIP download failed',
+        'curl_error' => $curlErr,
+        'curl_info'  => $curlInfo,
+        'body'       => substr($zipContent ?: '', 0, 500),
+    ], JSON_PRETTY_PRINT));
 }
 file_put_contents($zip, $zipContent);
 
