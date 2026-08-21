@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cart — NoBan Tees</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body{background:#0a0a0a;color:#fff;margin:0;font-family:sans-serif;}
+    .navbar{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;background:#0a0a0a;border-bottom:1px solid #222;}
+    .ban-sign{width:30px!important;height:30px!important;flex-shrink:0;}
+    .nav-cart svg{width:22px!important;height:22px!important;}
+    .nav-links{display:flex;gap:32px;list-style:none;}
+    svg{overflow:visible;}
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <svg class="ban-sign" width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="15" cy="15" r="13" stroke="#dc0000" stroke-width="2.5"/>
+      <line x1="4.5" y1="4.5" x2="25.5" y2="25.5" stroke="#dc0000" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    BAN.
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="shop.html">Shop All</a></li>
+    <li><a href="shop.html?cat=hoodies">Hoodies</a></li>
+    <li><a href="shop.html?cat=shirts">Shirts</a></li>
+    <li><a href="shop.html?cat=pants">Pants</a></li>
+  </ul>
+  <a href="cart.html" class="nav-cart">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <path d="M16 10a4 4 0 01-8 0"/>
+    </svg>
+    <span class="cart-count">0</span>
+  </a>
+</nav>
+
+<div class="cart-page">
+  <h1>Your Cart</h1>
+  <div id="cartContent"></div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <a href="index.html" class="nav-logo" style="display:inline-flex;align-items:center;gap:8px;font-size:32px;margin-bottom:12px;">
+        <svg width="34" height="34" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="15" cy="15" r="13" stroke="#dc0000" stroke-width="2.5"/>
+          <line x1="4.5" y1="4.5" x2="25.5" y2="25.5" stroke="#dc0000" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        BAN.
+      </a>
+      <p>Street clothing for those who refuse to be silenced.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Shop</h4>
+      <ul>
+        <li><a href="shop.html?cat=hoodies">Hoodies</a></li>
+        <li><a href="shop.html?cat=shirts">Shirts</a></li>
+        <li><a href="shop.html?cat=pants">Pants</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Info</h4>
+      <ul>
+        <li><a href="#">Shipping Policy</a></li>
+        <li><a href="#">Returns</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; 2025 NoBan Tees. All rights reserved.</span>
+    <span>nobantees.com</span>
+  </div>
+</footer>
+
+<script src="js/products.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/auth-modal.js"></script>
+<script>
+  function renderCart() {
+    const cart = getCart();
+    const container = document.getElementById('cartContent');
+
+    if (cart.length === 0) {
+      container.innerHTML = `
+        <div class="cart-empty">
+          <h2>Your cart is empty</h2>
+          <p style="margin-bottom:32px;">Add some gear to get started.</p>
+          <a href="shop.html" class="btn-primary">Shop Now</a>
+        </div>`;
+      return;
+    }
+
+    const subtotal = getCartTotal();
+    const shipping = subtotal >= 100 ? 0 : 8.99;
+    const total = subtotal + shipping;
+
+    const itemsHtml = cart.map(item => `
+      <div class="cart-item" data-key="${item.key}">
+        <div class="cart-item-img-placeholder">IMG</div>
+        <div class="cart-item-details">
+          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-meta">Size: ${item.size} &nbsp;|&nbsp; ${item.category}</div>
+          <div class="cart-item-price">$${(item.price * item.quantity).toFixed(2)}</div>
+        </div>
+        <div class="cart-item-controls">
+          <div class="qty-control">
+            <button class="qty-btn" onclick="changeQty('${item.key}', ${item.quantity - 1})">−</button>
+            <span class="qty-num">${item.quantity}</span>
+            <button class="qty-btn" onclick="changeQty('${item.key}', ${item.quantity + 1})">+</button>
+          </div>
+          <button class="remove-btn" onclick="removeItem('${item.key}')">Remove</button>
+        </div>
+      </div>`).join('');
+
+    container.innerHTML = `
+      <div class="cart-items">${itemsHtml}</div>
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span>$${subtotal.toFixed(2)}</span>
+        </div>
+        <div class="summary-row">
+          <span>Shipping</span>
+          <span>${shipping === 0 ? 'FREE' : '$' + shipping.toFixed(2)}</span>
+        </div>
+        ${shipping > 0 ? `<div class="summary-row" style="font-size:12px;color:#555;border:none;padding-top:0;">
+          <span>Add $${(100 - subtotal).toFixed(2)} more for free shipping</span>
+        </div>` : ''}
+        <div class="summary-row total">
+          <span>Total</span>
+          <span>$${total.toFixed(2)}</span>
+        </div>
+        <button class="checkout-btn" id="checkoutBtn" onclick="startCheckout()">
+          Proceed to Checkout
+        </button>
+        <p class="checkout-note">Secure checkout powered by Stripe &nbsp;🔒</p>
+      </div>`;
+  }
+
+  function changeQty(key, newQty) {
+    if (newQty < 1) { removeItem(key); return; }
+    updateQuantity(key, newQty);
+    renderCart();
+  }
+
+  function removeItem(key) {
+    removeFromCart(key);
+    renderCart();
+  }
+
+  async function startCheckout() {
+    const cart = getCart();
+    if (cart.length === 0) return;
+
+    const btn = document.getElementById('checkoutBtn');
+    btn.disabled = true;
+    btn.textContent = 'Redirecting to payment...';
+
+    try {
+      const response = await fetch('checkout.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: cart })
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert('Checkout error: ' + (data.error || 'Please try again.'));
+        btn.disabled = false;
+        btn.textContent = 'Proceed to Checkout';
+      }
+    } catch (err) {
+      alert('Could not connect to checkout. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Proceed to Checkout';
+    }
+  }
+
+  renderCart();
+</script>
+</body>
+</html>

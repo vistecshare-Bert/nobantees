@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmed — NoBan Tees</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body{background:#0a0a0a;color:#fff;margin:0;font-family:sans-serif;}
+    .navbar{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;background:#0a0a0a;border-bottom:1px solid #222;}
+    .ban-sign{width:30px!important;height:30px!important;flex-shrink:0;}
+    .nav-cart svg{width:22px!important;height:22px!important;}
+    .nav-links{display:flex;gap:32px;list-style:none;}
+    svg{overflow:visible;}
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <svg class="ban-sign" width="30" height="30" viewBox="0 0 30 30" fill="none">
+      <circle cx="15" cy="15" r="13" stroke="#dc0000" stroke-width="2.5"/>
+      <line x1="4.5" y1="4.5" x2="25.5" y2="25.5" stroke="#dc0000" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    BAN.
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="shop.html">Shop All</a></li>
+  </ul>
+  <a href="cart.html" class="nav-cart">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <path d="M16 10a4 4 0 01-8 0"/>
+    </svg>
+    <span class="cart-count">0</span>
+  </a>
+</nav>
+
+<div class="success-page">
+  <div class="success-content">
+    <h1>ORDER<br>CONFIRMED.</h1>
+    <p>Thank you for your order. You'll receive a confirmation email shortly.</p>
+    <a href="shop.html" class="btn-primary">Keep Shopping</a>
+  </div>
+</div>
+
+<script src="js/products.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/auth-modal.js"></script>
+<script>
+  // Clear cart after successful checkout
+  clearCart();
+</script>
+</body>
+</html>

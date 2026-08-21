@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — NoBan Tees</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body{background:#0a0a0a;color:#fff;margin:0;font-family:sans-serif;}
+    .navbar{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;background:#0a0a0a;border-bottom:1px solid #222;}
+    .ban-sign{width:30px!important;height:30px!important;flex-shrink:0;}
+    .nav-cart svg{width:22px!important;height:22px!important;}
+    .nav-links{display:flex;gap:32px;list-style:none;}
+    svg{overflow:visible;}
+
+    .form-page{max-width:560px;margin:0 auto;padding:64px 28px 100px;}
+    .form-page h1{font-family:var(--font-head);font-size:clamp(40px,7vw,56px);margin-bottom:8px;}
+    .form-page .sub{color:var(--gray);font-size:14px;margin-bottom:40px;}
+    .form-field{margin-bottom:18px;}
+    .form-field label{display:block;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);margin-bottom:6px;}
+    .form-field input,.form-field select,.form-field textarea{
+      width:100%;background:var(--card);border:1px solid var(--border);color:#fff;
+      padding:12px 14px;font-size:14px;font-family:var(--font-body);outline:none;transition:border-color .15s;box-sizing:border-box;
+    }
+    .form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--red);}
+    .form-field textarea{resize:vertical;min-height:120px;}
+    .form-msg{font-size:13px;margin-bottom:16px;min-height:18px;}
+    .form-msg.error{color:#ff4d4d;}
+    .form-msg.success{color:#4dff9a;}
+    .form-submit{width:100%;background:var(--red);color:#fff;border:none;padding:16px;font-family:var(--font-head);font-size:20px;letter-spacing:2px;cursor:pointer;transition:background .2s;text-transform:uppercase;}
+    .form-submit:hover{background:var(--red-hover);}
+    .form-submit:disabled{background:var(--gray2);cursor:not-allowed;}
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <svg class="ban-sign" width="30" height="30" viewBox="0 0 30 30" fill="none">
+      <circle cx="15" cy="15" r="13" stroke="#dc0000" stroke-width="2.5"/>
+      <line x1="4.5" y1="4.5" x2="25.5" y2="25.5" stroke="#dc0000" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    BAN.
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="shop.html">Shop All</a></li>
+    <li><a href="contact.html" class="active">Contact</a></li>
+  </ul>
+  <a href="cart.html" class="nav-cart">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <path d="M16 10a4 4 0 01-8 0"/>
+    </svg>
+    <span class="cart-count">0</span>
+  </a>
+</nav>
+
+<div class="form-page">
+  <p class="section-label">Get In Touch</p>
+  <h1>Contact Us</h1>
+  <p class="sub">Questions about an order, sizing, or anything else — send us a message.</p>
+
+  <form id="contactForm">
+    <div class="form-field">
+      <label for="cName">Name</label>
+      <input type="text" id="cName" required>
+    </div>
+    <div class="form-field">
+      <label for="cEmail">Email</label>
+      <input type="email" id="cEmail" required>
+    </div>
+    <div class="form-field">
+      <label for="cPhone">Phone (optional)</label>
+      <input type="tel" id="cPhone">
+    </div>
+    <div class="form-field">
+      <label for="cInquiry">Inquiry Type</label>
+      <select id="cInquiry" required>
+        <option value="">— Select —</option>
+        <option value="Order Question">Order Question</option>
+        <option value="Sizing">Sizing</option>
+        <option value="Returns / Exchanges">Returns / Exchanges</option>
+        <option value="Wholesale">Wholesale</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="cMessage">Message</label>
+      <textarea id="cMessage" required></textarea>
+    </div>
+    <div class="form-msg" id="cMsg"></div>
+    <button type="submit" class="form-submit" id="cBtn">Send Message</button>
+  </form>
+</div>
+
+<footer class="footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <a href="index.html" class="nav-logo" style="display:inline-flex;align-items:center;gap:8px;font-size:32px;margin-bottom:12px;">
+        <svg width="34" height="34" viewBox="0 0 30 30" fill="none">
+          <circle cx="15" cy="15" r="13" stroke="#dc0000" stroke-width="2.5"/>
+          <line x1="4.5" y1="4.5" x2="25.5" y2="25.5" stroke="#dc0000" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        BAN.
+      </a>
+      <p>Street clothing for those who refuse to be silenced.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Shop</h4>
+      <ul>
+        <li><a href="shop.html?cat=hoodies">Hoodies</a></li>
+        <li><a href="shop.html?cat=shirts">Shirts</a></li>
+        <li><a href="shop.html?cat=pants">Pants</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Info</h4>
+      <ul>
+        <li><a href="quote.html">Get a Quote</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; 2025 NoBan Tees. All rights reserved.</span>
+    <span>nobantees.com</span>
+  </div>
+</footer>
+
+<script src="js/products.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/auth-modal.js"></script>
+<script>
+document.getElementById('contactForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const msgEl = document.getElementById('cMsg');
+  const btn   = document.getElementById('cBtn');
+  msgEl.textContent = '';
+  msgEl.className = 'form-msg';
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  try {
+    const r = await fetch('contact-submit.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('cName').value,
+        email: document.getElementById('cEmail').value,
+        phone: document.getElementById('cPhone').value,
+        inquiry: document.getElementById('cInquiry').value,
+        message: document.getElementById('cMessage').value,
+      })
+    });
+    const d = await r.json();
+    if (d.success) {
+      msgEl.textContent = "Message sent — we'll get back to you shortly.";
+      msgEl.className = 'form-msg success';
+      document.getElementById('contactForm').reset();
+    } else {
+      msgEl.textContent = d.error || 'Something went wrong. Please try again.';
+      msgEl.className = 'form-msg error';
+    }
+  } catch (err) {
+    msgEl.textContent = 'Connection error. Please try again.';
+    msgEl.className = 'form-msg error';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Send Message';
+});
+</script>
+</body>
+</html>

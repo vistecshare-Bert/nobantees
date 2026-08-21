@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoBan Tees — Street. Bold. Banned.</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body{background:#0a0a0a;color:#fff;margin:0;font-family:sans-serif;}
+    .navbar{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;background:#0a0a0a;border-bottom:1px solid #222;}
+    .ban-sign{width:30px!important;height:30px!important;flex-shrink:0;}
+    .nav-cart svg{width:22px!important;height:22px!important;}
+    .nav-links{display:flex;gap:32px;list-style:none;}
+    svg{overflow:visible;}
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <svg class="ban-sign" width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="15" cy="15" r="13" stroke="#dc0000" stroke-width="2.5"/>
+      <line x1="4.5" y1="4.5" x2="25.5" y2="25.5" stroke="#dc0000" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    BAN.
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html" class="active">Home</a></li>
+    <li><a href="shop.html">Shop All</a></li>
+    <li><a href="shop.html?cat=hoodies">Hoodies</a></li>
+    <li><a href="shop.html?cat=shirts">Shirts</a></li>
+    <li><a href="shop.html?cat=pants">Pants</a></li>
+  </ul>
+  <a href="cart.html" class="nav-cart">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <path d="M16 10a4 4 0 01-8 0"/>
+    </svg>
+    <span class="cart-count">0</span>
+  </a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <p class="hero-eyebrow">New Drop — Street Collection 2025</p>
+    <h1 class="hero-title">NO<span>BAN</span>TEES</h1>
+    <p class="hero-sub">Hoodies. Shirts. Pants. Built for those who don't follow rules.</p>
+    <a href="shop.html" class="btn-primary">Shop Now</a>
+  </div>
+</section>
+
+<!-- SCROLLING BANNER -->
+<div class="banner-strip">
+  <div class="banner-track" id="bannerTrack">
+    <span class="banner-item">Free Shipping Over $100</span>
+    <span class="banner-item">•</span>
+    <span class="banner-item">New Drops Weekly</span>
+    <span class="banner-item">•</span>
+    <span class="banner-item">Street Ready</span>
+    <span class="banner-item">•</span>
+    <span class="banner-item">Sizes S — XXL</span>
+    <span class="banner-item">•</span>
+    <span class="banner-item">Free Shipping Over $100</span>
+    <span class="banner-item">•</span>
+    <span class="banner-item">New Drops Weekly</span>
+    <span class="banner-item">•</span>
+    <span class="banner-item">Street Ready</span>
+    <span class="banner-item">•</span>
+    <span class="banner-item">Sizes S — XXL</span>
+    <span class="banner-item">•</span>
+  </div>
+</div>
+
+<!-- FEATURED PRODUCTS -->
+<div class="section">
+  <p class="section-label">Featured</p>
+  <h2 class="section-title">New Arrivals</h2>
+  <div class="product-grid" id="featuredGrid"></div>
+  <div style="text-align:center; margin-top:48px;">
+    <a href="shop.html" class="btn-outline">View All Products</a>
+  </div>
+</div>
+
+<!-- CATEGORIES -->
+<div class="section" style="padding-top:0;">
+  <p class="section-label">Browse</p>
+  <h2 class="section-title">Shop by Category</h2>
+  <div class="categories-grid">
+    <a href="shop.html?cat=hoodies" class="cat-block">
+      <div class="cat-bg"><span class="cat-bg-text">H</span></div>
+      <div class="cat-info">
+        <div class="cat-name">Hoodies</div>
+        <div class="cat-count">5 Styles</div>
+        <div class="cat-arrow">Shop Now →</div>
+      </div>
+    </a>
+    <a href="shop.html?cat=shirts" class="cat-block">
+      <div class="cat-bg"><span class="cat-bg-text">S</span></div>
+      <div class="cat-info">
+        <div class="cat-name">Shirts</div>
+        <div class="cat-count">5 Styles</div>
+        <div class="cat-arrow">Shop Now →</div>
+      </div>
+    </a>
+    <a href="shop.html?cat=pants" class="cat-block">
+      <div class="cat-bg"><span class="cat-bg-text">P</span></div>
+      <div class="cat-info">
+        <div class="cat-name">Pants</div>
+        <div class="cat-count">5 Styles</div>
+        <div class="cat-arrow">Shop Now →</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <a href="index.html" class="nav-logo" style="display:inline-flex;align-items:center;gap:8px;font-size:32px;margin-bottom:12px;">
+        <svg width="34" height="34" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="15" cy="15" r="13" stroke="#dc0000" stroke-width="2.5"/>
+          <line x1="4.5" y1="4.5" x2="25.5" y2="25.5" stroke="#dc0000" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        BAN.
+      </a>
+      <p>Street clothing for those who refuse to be silenced.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Shop</h4>
+      <ul>
+        <li><a href="shop.html?cat=hoodies">Hoodies</a></li>
+        <li><a href="shop.html?cat=shirts">Shirts</a></li>
+        <li><a href="shop.html?cat=pants">Pants</a></li>
+        <li><a href="shop.html">All Products</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Info</h4>
+      <ul>
+        <li><a href="#">Shipping Policy</a></li>
+        <li><a href="#">Returns</a></li>
+        <li><a href="#">Size Guide</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; 2025 NoBan Tees. All rights reserved.</span>
+    <span>nobantees.com</span>
+  </div>
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <strong id="toastTitle">Added to Cart</strong>
+  <span id="toastMsg"></span>
+</div>
+
+<script src="js/products.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/auth-modal.js"></script>
+<script>
+  function makeProductCard(product) {
+    const imgHtml = `
+      <div class="product-placeholder">
+        <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <span class="placeholder-label">Photo Coming Soon</span>
+      </div>`;
+
+    return `
+      <div class="product-card">
+        <div class="product-image">${imgHtml}</div>
+        <div class="product-info">
+          <p class="product-category">${product.category}</p>
+          <h3 class="product-name">${product.name}</h3>
+          <p class="product-color">${product.color}</p>
+          <p class="product-price">$${product.price}.00</p>
+          <select class="size-select" id="size-${product.id}">
+            <option value="">— Select Size —</option>
+            ${sizes.map(s => `<option value="${s}">${s}</option>`).join('')}
+          </select>
+          <button class="btn-add-cart" onclick="handleAddToCart('${product.id}')">
+            Add to Cart
+          </button>
+        </div>
+      </div>`;
+  }
+
+  function handleAddToCart(id) {
+    const size = document.getElementById('size-' + id).value;
+    if (!size) { showToast('Select a size first', '', true); return; }
+    const ok = addToCart(id, size);
+    if (ok) {
+      const p = products.find(x => x.id === id);
+      showToast(p.name, 'Size ' + size + ' added to cart');
+    }
+  }
+
+  function showToast(title, msg, isError) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toastTitle').textContent = title;
+    document.getElementById('toastMsg').textContent = msg;
+    toast.style.borderColor = isError ? '#888' : 'var(--red)';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // Show first 4 products as featured
+  const featured = [products[0], products[5], products[10], products[3]];
+  document.getElementById('featuredGrid').innerHTML = featured.map(makeProductCard).join('');
+</script>
+</body>
+</html>

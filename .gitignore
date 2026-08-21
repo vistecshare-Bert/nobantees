@@ -1,0 +1,29 @@
+# Secrets — never commit real credentials
+config.php
+.deploy_key
+.github_token
+
+# Server-generated data — the live server copy is the source of truth,
+# never overwrite it from a deploy
+data/products.json
+js/products.js
+data/decorated_products.json
+data/decorated_categories.json
+data/users.json
+users.json
+orders.json
+pending_orders/
+quotes/
+contacts/
+
+# Staff-uploaded product photos — live uploads, not tracked in git
+images/hoodies/*
+images/shirts/*
+images/pants/*
+!images/hoodies/.gitkeep
+!images/shirts/.gitkeep
+!images/pants/.gitkeep
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
