@@ -1,5 +1,5 @@
 <?php
-set_time_limit(180);
+set_time_limit(300);
 // Auto-deploy webhook — called by GitHub Actions on every push to main.
 // Lives in the same directory it deploys into, so no server paths need hardcoding.
 
@@ -30,12 +30,17 @@ $curlHeaders = ['User-Agent: NobanteesDeploy/1.0'];
 if ($ghToken) $curlHeaders[] = "Authorization: token $ghToken";
 
 // GitHub Actions fires the instant you push, but codeload's zip archive for a
-// brand-new commit can lag a few seconds behind — retry before giving up.
-$maxAttempts = 5;
+// brand-new commit can lag behind — retry with backoff before giving up.
+// Also capture rate-limit headers in case the server's IP is being throttled
+// on GitHub's unauthenticated API quota (60 req/hr) rather than hitting a lag.
+$backoff     = [2, 3, 5, 8, 8, 8, 8, 8]; // ~50s total budget
+$maxAttempts = count($backoff) + 1;
 $zipContent  = false;
 $curlErr     = '';
 $curlInfo    = [];
+$rateHeaders = '';
 for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+    $headerBuf = '';
     $ch = curl_init($zipUrl);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
@@ -43,24 +48,30 @@ for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
         CURLOPT_HTTPHEADER     => $curlHeaders,
         CURLOPT_TIMEOUT        => 120,
         CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_HEADERFUNCTION => function ($curl, $header) use (&$headerBuf) {
+            if (stripos($header, 'x-ratelimit') === 0) $headerBuf .= $header;
+            return strlen($header);
+        },
     ]);
-    $zipContent = curl_exec($ch);
-    $curlErr    = curl_error($ch);
-    $curlInfo   = curl_getinfo($ch);
+    $zipContent  = curl_exec($ch);
+    $curlErr     = curl_error($ch);
+    $curlInfo    = curl_getinfo($ch);
+    $rateHeaders = $headerBuf;
     curl_close($ch);
 
     if ($zipContent && strlen($zipContent) >= 1000) break;
-    if ($attempt < $maxAttempts) sleep(3);
+    if ($attempt < $maxAttempts) sleep($backoff[$attempt - 1]);
 }
 
 if (!$zipContent || strlen($zipContent) < 1000) {
     http_response_code(500);
     die(json_encode([
-        'status'     => 'error',
-        'msg'        => 'ZIP download failed after ' . $maxAttempts . ' attempts',
-        'curl_error' => $curlErr,
-        'curl_info'  => $curlInfo,
-        'body'       => substr($zipContent ?: '', 0, 500),
+        'status'       => 'error',
+        'msg'          => 'ZIP download failed after ' . $maxAttempts . ' attempts',
+        'curl_error'   => $curlErr,
+        'curl_info'    => $curlInfo,
+        'rate_headers' => $rateHeaders,
+        'body'         => substr($zipContent ?: '', 0, 500),
     ], JSON_PRETTY_PRINT));
 }
 file_put_contents($zip, $zipContent);
