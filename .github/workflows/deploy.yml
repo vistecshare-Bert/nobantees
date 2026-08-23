@@ -10,9 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy via webhook
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
         run: |
+          # Strip any stray whitespace/newlines the secret may have picked up when it was saved —
+          # an embedded newline here makes curl fail instantly with "URL malformed" (exit code 3),
+          # before it ever reaches deploy.php.
+          TOKEN=$(printf '%s' "$DEPLOY_TOKEN" | tr -d '[:space:]')
+          if [ -z "$TOKEN" ]; then echo "DEPLOY_TOKEN secret is empty"; exit 1; fi
           HTTP_STATUS=$(curl -s -o /tmp/deploy_out.txt -w "%{http_code}" \
-            "https://nobantees.com/deploy.php?token=${{ secrets.DEPLOY_TOKEN }}&sha=${{ github.sha }}")
+            "https://nobantees.com/deploy.php?token=${TOKEN}&sha=${{ github.sha }}")
           cat /tmp/deploy_out.txt
           echo ""
           echo "HTTP status: $HTTP_STATUS"
