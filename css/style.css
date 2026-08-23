@@ -123,7 +123,7 @@ img { display: block; width: 100%; }
   padding: 80px 40px;
   background:
     linear-gradient(90deg, rgba(10,10,10,0.97) 0%, rgba(10,10,10,0.8) 34%, rgba(10,10,10,0.35) 58%, rgba(10,10,10,0.05) 78%),
-    url('../images/hero-banner.jpg') center right / cover no-repeat,
+    url('../images/noban-bg.jpg') center right / cover no-repeat,
     var(--bg);
   position: relative;
   overflow: hidden;
@@ -763,7 +763,7 @@ img { display: block; width: 100%; }
     padding: 90px 24px 60px;
     background:
       linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.88) 55%, rgba(10,10,10,0.98) 100%),
-      url('../images/hero-banner.jpg') center 25% / cover no-repeat,
+      url('../images/noban-bg.jpg') center 25% / cover no-repeat,
       var(--bg);
   }
   .hero-content { max-width: 100%; }
