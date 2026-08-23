@@ -59,5 +59,17 @@ Open js/products.js to change:
 - Prices
 - Colors / descriptions
 
+AUTO-DEPLOY
+================================
+Pushing to the "main" branch on GitHub automatically deploys to
+nobantees.com within about a minute (GitHub Actions -> deploy.php).
+Manual FTP/cPanel upload is no longer needed for code changes.
+
+Files that only exist on the live server and are never overwritten by
+a deploy: config.php, orders.json, users.json, pending_orders/,
+quotes/, contacts/, data/products.json, js/products.js,
+data/decorated_products.json, data/decorated_categories.json,
+data/users.json, images/hoodies/, images/shirts/, images/pants/.
+
 ==================================
 Need help? Visit: nobantees.com
