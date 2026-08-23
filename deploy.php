@@ -29,24 +29,35 @@ $zipUrl = "https://api.github.com/repos/vistecshare-Bert/nobantees/zipball/$ref"
 $curlHeaders = ['User-Agent: NobanteesDeploy/1.0'];
 if ($ghToken) $curlHeaders[] = "Authorization: token $ghToken";
 
-$ch = curl_init($zipUrl);
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_HTTPHEADER     => $curlHeaders,
-    CURLOPT_TIMEOUT        => 120,
-    CURLOPT_SSL_VERIFYPEER => true,
-]);
-$zipContent = curl_exec($ch);
-$curlErr    = curl_error($ch);
-$curlInfo   = curl_getinfo($ch);
-curl_close($ch);
+// GitHub Actions fires the instant you push, but codeload's zip archive for a
+// brand-new commit can lag a few seconds behind — retry before giving up.
+$maxAttempts = 5;
+$zipContent  = false;
+$curlErr     = '';
+$curlInfo    = [];
+for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+    $ch = curl_init($zipUrl);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTPHEADER     => $curlHeaders,
+        CURLOPT_TIMEOUT        => 120,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $zipContent = curl_exec($ch);
+    $curlErr    = curl_error($ch);
+    $curlInfo   = curl_getinfo($ch);
+    curl_close($ch);
+
+    if ($zipContent && strlen($zipContent) >= 1000) break;
+    if ($attempt < $maxAttempts) sleep(3);
+}
 
 if (!$zipContent || strlen($zipContent) < 1000) {
     http_response_code(500);
     die(json_encode([
         'status'     => 'error',
-        'msg'        => 'ZIP download failed',
+        'msg'        => 'ZIP download failed after ' . $maxAttempts . ' attempts',
         'curl_error' => $curlErr,
         'curl_info'  => $curlInfo,
         'body'       => substr($zipContent ?: '', 0, 500),
