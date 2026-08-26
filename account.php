@@ -33,7 +33,6 @@ function nbStatusColor($s) {
 <style>
 body{background:#0a0a0a;color:#fff;margin:0;font-family:sans-serif;}
 .navbar{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;background:#0a0a0a;border-bottom:1px solid #222;}
-.ban-sign{width:30px!important;height:30px!important;flex-shrink:0;}
 .nav-cart svg{width:22px!important;height:22px!important;}
 .nav-links{display:flex;gap:32px;list-style:none;}
 svg{overflow:visible;}
@@ -80,11 +79,7 @@ svg{overflow:visible;}
 
 <nav class="navbar">
   <a href="index.html" class="nav-logo">
-    <svg class="ban-sign" width="30" height="30" viewBox="0 0 30 30" fill="none">
-      <circle cx="15" cy="15" r="13" stroke="#dc0000" stroke-width="2.5"/>
-      <line x1="4.5" y1="4.5" x2="25.5" y2="25.5" stroke="#dc0000" stroke-width="2.5" stroke-linecap="round"/>
-    </svg>
-    BAN.
+    <img src="images/no-ban-logo.png" alt="NoBan Tees" class="logo-img">
   </a>
   <ul class="nav-links">
     <li><a href="index.html">Home</a></li>

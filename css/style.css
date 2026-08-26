@@ -56,12 +56,14 @@ img { display: block; width: 100%; }
   color: var(--white);
 }
 
-.nav-logo .ban-sign {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
+.logo-img {
+  height: 40px;
+  width: auto;
+  display: block;
+}
+
+.logo-img-lg {
+  height: 56px;
 }
 
 .nav-links {
