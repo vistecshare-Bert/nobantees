@@ -57,13 +57,13 @@ img { display: block; width: 100%; }
 }
 
 .logo-img {
-  height: 14px;
+  height: 24px;
   width: auto;
   display: block;
 }
 
 .logo-img-lg {
-  height: 19px;
+  height: 33px;
 }
 
 .nav-links {
