@@ -175,8 +175,8 @@
     setTimeout(() => toast.classList.remove('show'), 3000);
   }
 
-  // Show the 4 most recently added products as featured
-  const featured = products.slice(-4).reverse();
+  // Show the 8 most recently added products as featured
+  const featured = products.slice(-8).reverse();
   document.getElementById('featuredGrid').innerHTML = featured.map(makeProductCard).join('');
 </script>
 </body>
