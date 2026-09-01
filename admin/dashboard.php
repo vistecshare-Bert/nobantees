@@ -197,7 +197,12 @@ foreach ($products as $p) { if (isset($counts[$p['category']])) $counts[$p['cate
             <?php endif; ?>
           </div>
           <div>
-            <div class="prod-name"><?= htmlspecialchars($p['name']) ?></div>
+            <div class="prod-name">
+              <?= htmlspecialchars($p['name']) ?>
+              <?php if (!empty($p['badge'])): ?>
+                <span style="display:inline-block;background:#dc0000;color:#fff;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;margin-left:6px;vertical-align:middle;"><?= htmlspecialchars($p['badge']) ?></span>
+              <?php endif; ?>
+            </div>
           </div>
           <div><span class="cat-badge <?= htmlspecialchars($p['category']) ?>"><?= htmlspecialchars($p['category']) ?></span></div>
           <div class="price">$<?= number_format($p['price'], 2) ?></div>

@@ -14,6 +14,7 @@ $category = trim($_POST['category'] ?? '');
 $price    = floatval($_POST['price'] ?? 0);
 $color    = trim($_POST['color'] ?? '');
 $desc     = trim($_POST['description'] ?? '');
+$badge    = trim($_POST['badge'] ?? '');
 
 if (!$name || !$category || $price <= 0) {
     $_SESSION['flash'] = 'Please fill in all required fields.';
@@ -109,6 +110,7 @@ $product = [
     'price'       => $price,
     'color'       => $color,
     'description' => $desc,
+    'badge'       => $badge,
     'images'      => $images,
 ];
 

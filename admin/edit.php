@@ -172,6 +172,12 @@ $flash = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
             <input type="text" name="color" value="<?= htmlspecialchars($product['color'] ?? '') ?>" placeholder="e.g. Black, Washed Red">
           </div>
 
+          <div class="form-group">
+            <label>Badge / Ribbon (optional)</label>
+            <input type="text" name="badge" value="<?= htmlspecialchars($product['badge'] ?? '') ?>" placeholder="e.g. SALE, NEW, 20% OFF" maxlength="20">
+            <p class="hint">Shown as a tag on the product photo. Leave blank for none.</p>
+          </div>
+
           <div class="form-group full">
             <label>Description</label>
             <textarea name="description" placeholder="Short product description shown on store..."><?= htmlspecialchars($product['description'] ?? '') ?></textarea>

@@ -42,9 +42,11 @@ function makeProductCard(product) {
         <p class="product-desc" id="desc-${product.id}">${product.description}</p>
         <button type="button" class="desc-toggle" onclick="toggleDesc(event,'${product.id}')">Read more</button>` : '';
 
+  const badgeHtml = product.badge ? `<span class="product-badge">${product.badge}</span>` : '';
+
   return `
     <div class="product-card">
-      <div class="product-image" data-pid="${product.id}">${imgHtml}</div>
+      <div class="product-image" data-pid="${product.id}">${badgeHtml}${imgHtml}</div>
       <div class="product-info">
         <p class="product-category">${product.category}</p>
         <h3 class="product-name">${product.name}</h3>
