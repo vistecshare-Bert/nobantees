@@ -50,11 +50,14 @@ if ($removed) {
         return true;
     }));
 }
+$remainingExisting = $images; // still-valid existing paths, before new uploads are appended
 
-// Handle newly uploaded photos (multiple)
+// Handle newly uploaded photos (multiple), keyed by their upload index so the
+// photo_order[] field below can reference them as "new:<i>"
 $allowed = ['jpg'=>'image/jpeg','jpeg'=>'image/jpeg','png'=>'image/png','webp'=>'image/webp'];
 $finfo   = finfo_open(FILEINFO_MIME_TYPE);
 $count   = count($images);
+$uploaded = [];
 
 if (!empty($_FILES['images']['name']) && is_array($_FILES['images']['name'])) {
     foreach ($_FILES['images']['name'] as $i => $origName) {
@@ -75,11 +78,29 @@ if (!empty($_FILES['images']['name']) && is_array($_FILES['images']['name'])) {
         $destPath = $destDir . $filename;
 
         if (move_uploaded_file($tmpName, $destPath)) {
-            $images[] = "images/$folder/$filename";
+            $uploaded[$i] = "images/$folder/$filename";
+            $images[] = $uploaded[$i];
         }
     }
 }
 finfo_close($finfo);
+
+// If the admin reordered/interleaved photos client-side, honor that exact
+// order instead of "existing first, then new" -- falls back to the order
+// built above if JS didn't run (e.g. no photo_order field present at all).
+if (!empty($_POST['photo_order']) && is_array($_POST['photo_order'])) {
+    $ordered = [];
+    foreach ($_POST['photo_order'] as $token) {
+        if (strpos($token, 'existing:') === 0) {
+            $path = substr($token, strlen('existing:'));
+            if (in_array($path, $remainingExisting, true)) $ordered[] = $path;
+        } elseif (strpos($token, 'new:') === 0) {
+            $idx = (int) substr($token, strlen('new:'));
+            if (isset($uploaded[$idx])) $ordered[] = $uploaded[$idx];
+        }
+    }
+    if ($ordered) $images = $ordered;
+}
 
 $product = [
     'id'          => $id,

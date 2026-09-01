@@ -64,12 +64,14 @@ $flash = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
     .upload-label{font-size:14px;color:#555;margin-bottom:4px;}
     .upload-hint{font-size:12px;color:#333;}
     .photo-grid{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;}
-    .photo-thumb{position:relative;width:100px;height:120px;flex-shrink:0;}
-    .photo-thumb img{width:100%;height:100%;object-fit:cover;border:1px solid #2a2a2a;}
-    .photo-thumb .rm-btn{position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#dc0000;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+    .photo-thumb{position:relative;width:100px;height:120px;flex-shrink:0;cursor:grab;}
+    .photo-thumb img{width:100%;height:100%;object-fit:cover;border:1px solid #2a2a2a;pointer-events:none;}
+    .photo-thumb.dragging{opacity:.35;}
+    .photo-thumb.drag-over{border:2px dashed #dc0000;}
+    .photo-thumb .rm-btn{position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#dc0000;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .2s;z-index:2;}
     .photo-thumb .rm-btn:hover{background:#ff2020;}
-    .photo-thumb.marked{opacity:.3;}
     .photo-thumb .new-tag{position:absolute;bottom:4px;left:4px;background:rgba(0,200,100,.85);color:#000;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;font-weight:700;}
+    .photo-thumb .cover-tag{position:absolute;top:4px;left:4px;background:rgba(220,0,0,.92);color:#fff;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;font-weight:700;}
     /* ACTIONS */
     .form-actions{display:flex;gap:12px;margin-top:8px;}
     .btn-save{background:#dc0000;color:#fff;border:none;padding:14px 40px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;cursor:pointer;transition:background .2s;}
@@ -186,19 +188,12 @@ $flash = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
                   if (file_exists($p)) $existing[] = ['path' => $img, 'v' => filemtime($p)];
               }
             ?>
-            <?php if ($existing): ?>
-              <div class="photo-grid" id="existingGrid">
-                <?php foreach ($existing as $img): ?>
-                  <div class="photo-thumb" data-path="<?= htmlspecialchars($img['path']) ?>">
-                    <img src="../<?= htmlspecialchars($img['path']) ?>?v=<?= $img['v'] ?>" alt="Product photo">
-                    <button type="button" class="rm-btn" onclick="removeExisting(this)" title="Remove photo">&times;</button>
-                  </div>
-                <?php endforeach; ?>
-              </div>
-              <p class="hint" style="margin-top:-8px;margin-bottom:16px;">Click &times; to remove a photo. Add more below.</p>
-            <?php endif; ?>
+
+            <div class="photo-grid" id="photoGrid"></div>
+            <p class="hint" id="dragHint" style="margin-bottom:16px;display:none;">Drag photos to reorder. The one marked <strong>Cover</strong> is shown first on the shop page.</p>
 
             <div id="removedInputs"></div>
+            <div id="orderInputs"></div>
 
             <div class="upload-area" id="uploadArea">
               <input type="file" name="images[]" id="imageInput" accept=".jpg,.jpeg,.png,.webp" multiple>
@@ -210,8 +205,7 @@ $flash = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
               <p class="upload-label">Click to upload photos</p>
               <p class="upload-hint">JPG, PNG, WEBP — Max 10MB each — select multiple at once for a photo carousel</p>
             </div>
-            <div class="photo-grid" id="newPreviewGrid"></div>
-            <p class="hint">First photo (existing or new) is shown first; the rest appear as a carousel on the shop page.</p>
+            <p class="hint">Add photos above, then drag to reorder — the first one becomes the cover shown on the shop page.</p>
           </div>
 
         </div>
@@ -226,33 +220,123 @@ $flash = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
 </div>
 
 <script>
-  function removeExisting(btn) {
-    const thumb = btn.closest('.photo-thumb');
-    thumb.classList.add('marked');
-    btn.disabled = true;
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'removed_images[]';
-    input.value = thumb.dataset.path;
-    document.getElementById('removedInputs').appendChild(input);
+  // photoState is the single source of truth for both existing (already-saved)
+  // and newly-selected photos, in the order they'll be saved. Index 0 = cover.
+  let photoState = <?= json_encode(array_map(fn($img) => ['type' => 'existing', 'path' => $img['path'], 'v' => $img['v']], $existing)) ?>;
+  const originalPaths = photoState.map(p => p.path);
+  const form = document.querySelector('form[action="save.php"]');
+  const imageInput = document.getElementById('imageInput');
+  let dragFromIndex = null;
+
+  function thumbSrc(item) {
+    return item.type === 'existing' ? `../${item.path}?v=${item.v}` : item.dataUrl;
   }
 
-  document.getElementById('imageInput').addEventListener('change', function(e) {
-    const grid = document.getElementById('newPreviewGrid');
+  function renderPhotoGrid() {
+    const grid = document.getElementById('photoGrid');
     grid.innerHTML = '';
+    document.getElementById('dragHint').style.display = photoState.length > 1 ? 'block' : 'none';
+
+    photoState.forEach((item, i) => {
+      const div = document.createElement('div');
+      div.className = 'photo-thumb';
+      div.draggable = true;
+      div.dataset.index = i;
+
+      const img = document.createElement('img');
+      img.src = thumbSrc(item);
+      img.alt = 'Product photo';
+      div.appendChild(img);
+
+      if (i === 0) {
+        const cover = document.createElement('span');
+        cover.className = 'cover-tag';
+        cover.textContent = 'Cover';
+        div.appendChild(cover);
+      }
+      if (item.type === 'new') {
+        const tag = document.createElement('span');
+        tag.className = 'new-tag';
+        tag.textContent = 'New';
+        div.appendChild(tag);
+      }
+
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'rm-btn';
+      rm.title = 'Remove photo';
+      rm.innerHTML = '&times;';
+      rm.onclick = () => { photoState.splice(i, 1); renderPhotoGrid(); };
+      div.appendChild(rm);
+
+      div.addEventListener('dragstart', () => { dragFromIndex = i; div.classList.add('dragging'); });
+      div.addEventListener('dragend', () => { div.classList.remove('dragging'); });
+      div.addEventListener('dragover', (e) => { e.preventDefault(); div.classList.add('drag-over'); });
+      div.addEventListener('dragleave', () => { div.classList.remove('drag-over'); });
+      div.addEventListener('drop', (e) => {
+        e.preventDefault();
+        div.classList.remove('drag-over');
+        if (dragFromIndex === null || dragFromIndex === i) return;
+        const [moved] = photoState.splice(dragFromIndex, 1);
+        photoState.splice(i, 0, moved);
+        dragFromIndex = null;
+        renderPhotoGrid();
+      });
+
+      grid.appendChild(div);
+    });
+  }
+
+  imageInput.addEventListener('change', function (e) {
     [...e.target.files].forEach(file => {
       const reader = new FileReader();
-      reader.onload = function(ev) {
-        const div = document.createElement('div');
-        div.className = 'photo-thumb';
-        div.innerHTML = `<img src="${ev.target.result}" alt="${file.name}"><span class="new-tag">New</span>`;
-        grid.appendChild(div);
+      reader.onload = (ev) => {
+        photoState.push({ type: 'new', file, dataUrl: ev.target.result });
+        renderPhotoGrid();
       };
       reader.readAsDataURL(file);
     });
-    document.querySelector('.upload-label').textContent =
-      e.target.files.length ? `${e.target.files.length} photo(s) selected` : 'Click to upload photos';
+    document.querySelector('.upload-label').textContent = 'Click to upload more photos';
   });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    // Rebuild the file input to contain only the "new" files, in their current order
+    const dt = new DataTransfer();
+    photoState.filter(p => p.type === 'new').forEach(p => dt.items.add(p.file));
+    imageInput.files = dt.files;
+
+    // Record final photo order (existing paths + indices into the new-file list above)
+    const orderWrap = document.getElementById('orderInputs');
+    orderWrap.innerHTML = '';
+    let newIndex = 0;
+    photoState.forEach(item => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'photo_order[]';
+      input.value = item.type === 'existing' ? `existing:${item.path}` : `new:${newIndex++}`;
+      orderWrap.appendChild(input);
+    });
+
+    // Record which originally-existing photos were removed
+    const removedWrap = document.getElementById('removedInputs');
+    removedWrap.innerHTML = '';
+    const stillPresent = new Set(photoState.filter(p => p.type === 'existing').map(p => p.path));
+    originalPaths.forEach(path => {
+      if (!stillPresent.has(path)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'removed_images[]';
+        input.value = path;
+        removedWrap.appendChild(input);
+      }
+    });
+
+    form.submit();
+  });
+
+  renderPhotoGrid();
 </script>
 </body>
 </html>
