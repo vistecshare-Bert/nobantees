@@ -63,11 +63,13 @@ $flash = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
     .upload-icon{width:40px;height:40px;margin:0 auto 12px;color:#444;}
     .upload-label{font-size:14px;color:#555;margin-bottom:4px;}
     .upload-hint{font-size:12px;color:#333;}
-    .preview-wrap{margin-top:16px;display:none;}
-    .preview-wrap img{max-height:200px;max-width:100%;object-fit:contain;border:1px solid #2a2a2a;}
-    .current-img{margin-bottom:12px;}
-    .current-img img{height:120px;object-fit:cover;border:1px solid #2a2a2a;}
-    .current-img p{font-size:12px;color:#555;margin-top:6px;}
+    .photo-grid{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;}
+    .photo-thumb{position:relative;width:100px;height:120px;flex-shrink:0;}
+    .photo-thumb img{width:100%;height:100%;object-fit:cover;border:1px solid #2a2a2a;}
+    .photo-thumb .rm-btn{position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#dc0000;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+    .photo-thumb .rm-btn:hover{background:#ff2020;}
+    .photo-thumb.marked{opacity:.3;}
+    .photo-thumb .new-tag{position:absolute;bottom:4px;left:4px;background:rgba(0,200,100,.85);color:#000;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;font-weight:700;}
     /* ACTIONS */
     .form-actions{display:flex;gap:12px;margin-top:8px;}
     .btn-save{background:#dc0000;color:#fff;border:none;padding:14px 40px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;cursor:pointer;transition:background .2s;}
@@ -174,33 +176,42 @@ $flash = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
           </div>
 
           <div class="form-group full">
-            <label>Product Photo</label>
+            <label>Product Photos</label>
 
             <?php
-              $currentImg = $product['image'] ?? '';
-              $imgPath = dirname(__DIR__) . '/' . $currentImg;
-              if ($isEdit && $currentImg && file_exists($imgPath)):
+              $currentImages = $isEdit ? normalizeProductImages($product)['images'] : [];
+              $existing = [];
+              foreach ($currentImages as $img) {
+                  $p = dirname(__DIR__) . '/' . $img;
+                  if (file_exists($p)) $existing[] = ['path' => $img, 'v' => filemtime($p)];
+              }
             ?>
-              <div class="current-img">
-                <img src="../<?= htmlspecialchars($currentImg) ?>?v=<?= filemtime($imgPath) ?>" alt="Current photo">
-                <p>Current photo — upload a new one to replace it</p>
+            <?php if ($existing): ?>
+              <div class="photo-grid" id="existingGrid">
+                <?php foreach ($existing as $img): ?>
+                  <div class="photo-thumb" data-path="<?= htmlspecialchars($img['path']) ?>">
+                    <img src="../<?= htmlspecialchars($img['path']) ?>?v=<?= $img['v'] ?>" alt="Product photo">
+                    <button type="button" class="rm-btn" onclick="removeExisting(this)" title="Remove photo">&times;</button>
+                  </div>
+                <?php endforeach; ?>
               </div>
+              <p class="hint" style="margin-top:-8px;margin-bottom:16px;">Click &times; to remove a photo. Add more below.</p>
             <?php endif; ?>
 
+            <div id="removedInputs"></div>
+
             <div class="upload-area" id="uploadArea">
-              <input type="file" name="image" id="imageInput" accept=".jpg,.jpeg,.png,.webp">
+              <input type="file" name="images[]" id="imageInput" accept=".jpg,.jpeg,.png,.webp" multiple>
               <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
                 <polyline points="17 8 12 3 7 8"/>
                 <line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
-              <p class="upload-label">Click to upload photo</p>
-              <p class="upload-hint">JPG, PNG, WEBP — Max 10MB</p>
-              <div class="preview-wrap" id="previewWrap">
-                <img id="previewImg" src="" alt="Preview">
-              </div>
+              <p class="upload-label">Click to upload photos</p>
+              <p class="upload-hint">JPG, PNG, WEBP — Max 10MB each — select multiple at once for a photo carousel</p>
             </div>
-            <p class="hint">Photo will be saved and shown on the store automatically.</p>
+            <div class="photo-grid" id="newPreviewGrid"></div>
+            <p class="hint">First photo (existing or new) is shown first; the rest appear as a carousel on the shop page.</p>
           </div>
 
         </div>
@@ -215,16 +226,32 @@ $flash = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
 </div>
 
 <script>
+  function removeExisting(btn) {
+    const thumb = btn.closest('.photo-thumb');
+    thumb.classList.add('marked');
+    btn.disabled = true;
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'removed_images[]';
+    input.value = thumb.dataset.path;
+    document.getElementById('removedInputs').appendChild(input);
+  }
+
   document.getElementById('imageInput').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      document.getElementById('previewImg').src = ev.target.result;
-      document.getElementById('previewWrap').style.display = 'block';
-      document.querySelector('.upload-label').textContent = file.name;
-    };
-    reader.readAsDataURL(file);
+    const grid = document.getElementById('newPreviewGrid');
+    grid.innerHTML = '';
+    [...e.target.files].forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const div = document.createElement('div');
+        div.className = 'photo-thumb';
+        div.innerHTML = `<img src="${ev.target.result}" alt="${file.name}"><span class="new-tag">New</span>`;
+        grid.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    });
+    document.querySelector('.upload-label').textContent =
+      e.target.files.length ? `${e.target.files.length} photo(s) selected` : 'Click to upload photos';
   });
 </script>
 </body>

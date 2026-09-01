@@ -98,7 +98,7 @@
 
     const itemsHtml = cart.map(item => `
       <div class="cart-item" data-key="${item.key}">
-        <div class="cart-item-img-placeholder">IMG</div>
+        ${item.image ? `<img class="cart-item-img" src="${item.image}" alt="${item.name}">` : `<div class="cart-item-img-placeholder">IMG</div>`}
         <div class="cart-item-details">
           <div class="cart-item-name">${item.name}</div>
           <div class="cart-item-meta">Size: ${item.size} &nbsp;|&nbsp; ${item.category}</div>

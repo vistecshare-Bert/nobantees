@@ -49,7 +49,7 @@ foreach ($products as $p) { if (isset($counts[$p['category']])) $counts[$p['cate
     .table-row{display:grid;grid-template-columns:64px 1fr 120px 80px 100px 120px;gap:16px;align-items:center;padding:14px 20px;border-bottom:1px solid #111;transition:background .15s;}
     .table-row:last-child{border-bottom:none;}
     .table-row:hover{background:#1a1a1a;}
-    .thumb{width:52px;height:64px;object-fit:cover;background:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:9px;color:#333;flex-shrink:0;}
+    .thumb{width:52px;height:64px;object-fit:cover;background:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:9px;color:#333;flex-shrink:0;position:relative;}
     .thumb img{width:100%;height:100%;object-fit:cover;}
     .prod-name{font-weight:500;font-size:14px;line-height:1.3;}
     .prod-color{font-size:12px;color:#555;margin-top:2px;}
@@ -164,10 +164,14 @@ foreach ($products as $p) { if (isset($counts[$p['category']])) $counts[$p['cate
         <div class="table-row">
           <div class="thumb">
             <?php
-              $imgPath = dirname(__DIR__) . '/' . ($p['image'] ?? '');
-              if (!empty($p['image']) && file_exists($imgPath)):
+              $thumbImg = normalizeProductImages($p)['images'][0] ?? '';
+              $imgPath  = dirname(__DIR__) . '/' . $thumbImg;
+              if ($thumbImg && file_exists($imgPath)):
             ?>
-              <img src="../<?= htmlspecialchars($p['image']) ?>?v=<?= filemtime($imgPath) ?>" alt="">
+              <img src="../<?= htmlspecialchars($thumbImg) ?>?v=<?= filemtime($imgPath) ?>" alt="">
+              <?php if (count(normalizeProductImages($p)['images']) > 1): ?>
+                <span style="position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,.7);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;">+<?= count(normalizeProductImages($p)['images']) - 1 ?></span>
+              <?php endif; ?>
             <?php else: ?>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <?php endif; ?>

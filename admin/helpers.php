@@ -67,9 +67,21 @@ function loadProducts() {
     if (!file_exists($file)) {
         $defaults = defaultProducts();
         saveProducts($defaults);
-        return $defaults;
+        return array_map('normalizeProductImages', $defaults);
     }
-    return json_decode(file_get_contents($file), true) ?: [];
+    $products = json_decode(file_get_contents($file), true) ?: [];
+    return array_map('normalizeProductImages', $products);
+}
+
+// Migrates the old single `image` field to the `images` array on the fly,
+// so existing data (old products.json on the live server, or old defaults
+// below) keeps working without a manual migration step.
+function normalizeProductImages($product) {
+    if (!isset($product['images'])) {
+        $product['images'] = !empty($product['image']) ? [$product['image']] : [];
+    }
+    unset($product['image']);
+    return $product;
 }
 
 function saveProducts($products) {

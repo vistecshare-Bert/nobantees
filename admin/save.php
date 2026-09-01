@@ -27,54 +27,59 @@ if ($isNew) {
     $id = generateId($category, $products);
 }
 
-// Build image path
+// Build image paths
 $catFolders = ['hoodies'=>'hoodies','shirts'=>'shirts','pants'=>'pants'];
 $folder = $catFolders[$category] ?? $category;
-$imagePath = ''; // will be set below
+$images = [];
 
-// Find existing product image if editing
+// Find existing product photos if editing
 if (!$isNew) {
     foreach ($products as $p) {
-        if ($p['id'] === $id) { $imagePath = $p['image'] ?? ''; break; }
+        if ($p['id'] === $id) { $images = normalizeProductImages($p)['images']; break; }
     }
 }
 
-// Handle image upload
-if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-    $allowed = ['jpg'=>'image/jpeg','jpeg'=>'image/jpeg','png'=>'image/png','webp'=>'image/webp'];
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime = finfo_file($finfo, $_FILES['image']['tmp_name']);
-    finfo_close($finfo);
+// Drop any photos the admin explicitly removed in the form
+$removed = $_POST['removed_images'] ?? [];
+if ($removed) {
+    $images = array_values(array_filter($images, function ($img) use ($removed) {
+        if (in_array($img, $removed, true)) {
+            @unlink(dirname(__DIR__) . '/' . $img);
+            return false;
+        }
+        return true;
+    }));
+}
 
-    $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-    $validMime = in_array($mime, array_values($allowed));
-    $validExt  = isset($allowed[$ext]);
-    $validSize = $_FILES['image']['size'] <= 10 * 1024 * 1024;
+// Handle newly uploaded photos (multiple)
+$allowed = ['jpg'=>'image/jpeg','jpeg'=>'image/jpeg','png'=>'image/png','webp'=>'image/webp'];
+$finfo   = finfo_open(FILEINFO_MIME_TYPE);
+$count   = count($images);
 
-    if ($validMime && $validExt && $validSize) {
-        $destDir  = dirname(__DIR__) . "/images/$folder/";
+if (!empty($_FILES['images']['name']) && is_array($_FILES['images']['name'])) {
+    foreach ($_FILES['images']['name'] as $i => $origName) {
+        if ($_FILES['images']['error'][$i] !== UPLOAD_ERR_OK || !$origName) continue;
+
+        $tmpName = $_FILES['images']['tmp_name'][$i];
+        $mime    = finfo_file($finfo, $tmpName);
+        $ext     = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+        $validMime = in_array($mime, array_values($allowed));
+        $validExt  = isset($allowed[$ext]);
+        $validSize = $_FILES['images']['size'][$i] <= 10 * 1024 * 1024;
+        if (!$validMime || !$validExt || !$validSize) continue;
+
+        $destDir = dirname(__DIR__) . "/images/$folder/";
         if (!is_dir($destDir)) mkdir($destDir, 0755, true);
-        $filename = $id . '.' . $ext;
+        $count++;
+        $filename = $id . '-' . $count . '.' . $ext;
         $destPath = $destDir . $filename;
 
-        // Remove old image file if extension changed
-        if ($imagePath && file_exists(dirname(__DIR__) . '/' . $imagePath)) {
-            $oldExt = pathinfo($imagePath, PATHINFO_EXTENSION);
-            if ($oldExt !== $ext) {
-                @unlink(dirname(__DIR__) . '/' . $imagePath);
-            }
-        }
-
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $destPath)) {
-            $imagePath = "images/$folder/$filename";
+        if (move_uploaded_file($tmpName, $destPath)) {
+            $images[] = "images/$folder/$filename";
         }
     }
 }
-
-// Default image path if still empty
-if (!$imagePath) {
-    $imagePath = "images/$folder/$id.jpg";
-}
+finfo_close($finfo);
 
 $product = [
     'id'          => $id,
@@ -83,7 +88,7 @@ $product = [
     'price'       => $price,
     'color'       => $color,
     'description' => $desc,
-    'image'       => $imagePath,
+    'images'      => $images,
 ];
 
 if ($isNew) {

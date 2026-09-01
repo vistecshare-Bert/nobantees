@@ -17,9 +17,9 @@ $products = array_filter($products, function($p) use ($id, &$deleted) {
 });
 
 if ($deleted) {
-    // Remove the image file
-    if (!empty($deleted['image'])) {
-        $imgFile = dirname(__DIR__) . '/' . $deleted['image'];
+    // Remove all photo files
+    foreach (normalizeProductImages($deleted)['images'] as $img) {
+        $imgFile = dirname(__DIR__) . '/' . $img;
         if (file_exists($imgFile)) @unlink($imgFile);
     }
     saveProducts($products);

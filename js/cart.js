@@ -20,13 +20,14 @@ function addToCart(productId, size) {
   if (existing) {
     existing.quantity += 1;
   } else {
+    const firstImage = (Array.isArray(product.images) && product.images[0]) || product.image || '';
     cart.push({
       key,
       id: product.id,
       name: product.name,
       price: product.price,
       category: product.category,
-      image: product.image,
+      image: firstImage,
       size,
       quantity: 1
     });
