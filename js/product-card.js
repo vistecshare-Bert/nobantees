@@ -38,13 +38,17 @@ function makeProductCard(product) {
       <div class="carousel-dots">${dots}</div>`;
   }
 
+  const descHtml = product.description ? `
+        <p class="product-desc" id="desc-${product.id}">${product.description}</p>
+        <button type="button" class="desc-toggle" onclick="toggleDesc(event,'${product.id}')">Read more</button>` : '';
+
   return `
     <div class="product-card">
       <div class="product-image" data-pid="${product.id}">${imgHtml}</div>
       <div class="product-info">
         <p class="product-category">${product.category}</p>
         <h3 class="product-name">${product.name}</h3>
-        <p class="product-color">${product.color}</p>
+        <p class="product-color">${product.color}</p>${descHtml}
         <p class="product-price">$${product.price}.00</p>
         <select class="size-select" id="size-${product.id}">
           <option value="">— Select Size —</option>
@@ -55,6 +59,15 @@ function makeProductCard(product) {
         </button>
       </div>
     </div>`;
+}
+
+function toggleDesc(e, id) {
+  e.preventDefault();
+  e.stopPropagation();
+  const el = document.getElementById(`desc-${id}`);
+  if (!el) return;
+  const expanded = el.classList.toggle('expanded');
+  e.target.textContent = expanded ? 'Read less' : 'Read more';
 }
 
 function cycleCarousel(e, id, dir) {
