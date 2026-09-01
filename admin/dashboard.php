@@ -45,8 +45,8 @@ foreach ($products as $p) { if (isset($counts[$p['category']])) $counts[$p['cate
     .flash{background:rgba(0,200,100,.1);border:1px solid rgba(0,200,100,.3);color:#4dff9a;padding:12px 20px;margin-bottom:24px;font-size:14px;}
     /* TABLE */
     .table-wrap{background:#141414;border:1px solid #1e1e1e;overflow:hidden;}
-    .table-head{display:grid;grid-template-columns:64px 1fr 120px 80px 100px 120px;gap:16px;padding:14px 20px;border-bottom:1px solid #1e1e1e;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#444;}
-    .table-row{display:grid;grid-template-columns:64px 1fr 120px 80px 100px 120px;gap:16px;align-items:center;padding:14px 20px;border-bottom:1px solid #111;transition:background .15s;}
+    .table-head{display:grid;grid-template-columns:28px 64px 1fr 120px 80px 100px 120px;gap:16px;padding:14px 20px;border-bottom:1px solid #1e1e1e;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#444;align-items:center;}
+    .table-row{display:grid;grid-template-columns:28px 64px 1fr 120px 80px 100px 120px;gap:16px;align-items:center;padding:14px 20px;border-bottom:1px solid #111;transition:background .15s;}
     .table-row:last-child{border-bottom:none;}
     .table-row:hover{background:#1a1a1a;}
     .thumb{width:52px;height:64px;object-fit:cover;background:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:9px;color:#333;flex-shrink:0;position:relative;}
@@ -64,6 +64,15 @@ foreach ($products as $p) { if (isset($counts[$p['category']])) $counts[$p['cate
     .btn-del{background:none;border:1px solid #2a2a2a;color:#555;padding:7px 14px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.5px;transition:all .2s;}
     .btn-del:hover{border-color:#dc0000;color:#dc0000;}
     .empty{text-align:center;padding:60px;color:#333;font-size:14px;}
+    /* BULK SELECT */
+    .row-check,#selectAll{width:16px;height:16px;accent-color:#dc0000;cursor:pointer;}
+    .bulk-bar{display:none;align-items:center;justify-content:space-between;background:#1a1010;border:1px solid #dc0000;padding:12px 20px;margin-bottom:16px;font-size:14px;}
+    .bulk-bar.show{display:flex;}
+    .bulk-bar span{color:#fff;}
+    .btn-bulk-del{background:#dc0000;color:#fff;border:none;padding:9px 20px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1.5px;cursor:pointer;transition:background .2s;}
+    .btn-bulk-del:hover{background:#ff2020;}
+    .btn-clear-sel{background:none;border:none;color:#888;font-size:12px;cursor:pointer;text-decoration:underline;margin-left:16px;font-family:'Inter',sans-serif;}
+    .btn-clear-sel:hover{color:#fff;}
   </style>
 </head>
 <body>
@@ -146,9 +155,19 @@ foreach ($products as $p) { if (isset($counts[$p['category']])) $counts[$p['cate
       </div>
     </div>
 
+    <!-- BULK ACTIONS -->
+    <div class="bulk-bar" id="bulkBar">
+      <span><strong id="bulkCount">0</strong> selected</span>
+      <div>
+        <button type="button" class="btn-bulk-del" onclick="bulkDelete()">Delete Selected</button>
+        <button type="button" class="btn-clear-sel" onclick="clearSelection()">Clear</button>
+      </div>
+    </div>
+
     <!-- PRODUCT TABLE -->
     <div class="table-wrap">
       <div class="table-head">
+        <span><input type="checkbox" id="selectAll" onchange="toggleAll(this)" <?= empty($products) ? 'disabled' : '' ?>></span>
         <span>Photo</span>
         <span>Product</span>
         <span>Category</span>
@@ -162,6 +181,7 @@ foreach ($products as $p) { if (isset($counts[$p['category']])) $counts[$p['cate
       <?php else: ?>
         <?php foreach ($products as $p): ?>
         <div class="table-row">
+          <div><input type="checkbox" class="row-check" value="<?= htmlspecialchars($p['id']) ?>" onchange="updateBulkBar()"></div>
           <div class="thumb">
             <?php
               $thumbImg = normalizeProductImages($p)['images'][0] ?? '';
@@ -196,5 +216,50 @@ foreach ($products as $p) { if (isset($counts[$p['category']])) $counts[$p['cate
     </div>
   </main>
 </div>
+<script>
+  function getChecked() {
+    return [...document.querySelectorAll('.row-check')].filter(c => c.checked);
+  }
+
+  function updateBulkBar() {
+    const checked = getChecked();
+    const bar = document.getElementById('bulkBar');
+    document.getElementById('bulkCount').textContent = checked.length;
+    bar.classList.toggle('show', checked.length > 0);
+
+    const all = [...document.querySelectorAll('.row-check')];
+    const selectAll = document.getElementById('selectAll');
+    if (selectAll) selectAll.checked = all.length > 0 && checked.length === all.length;
+  }
+
+  function toggleAll(box) {
+    document.querySelectorAll('.row-check').forEach(c => c.checked = box.checked);
+    updateBulkBar();
+  }
+
+  function clearSelection() {
+    document.querySelectorAll('.row-check').forEach(c => c.checked = false);
+    updateBulkBar();
+  }
+
+  function bulkDelete() {
+    const ids = getChecked().map(c => c.value);
+    if (!ids.length) return;
+    if (!confirm(`Delete ${ids.length} product(s)? This cannot be undone.`)) return;
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'bulk_delete.php';
+    ids.forEach(id => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'ids[]';
+      input.value = id;
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    form.submit();
+  }
+</script>
 </body>
 </html>
