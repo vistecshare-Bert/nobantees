@@ -32,7 +32,6 @@ $post_fields = [
     'success_url'             => SITE_URL . '/verify-order.php?sid={CHECKOUT_SESSION_ID}',
     'cancel_url'              => SITE_URL . '/cart.html',
     'payment_method_types[0]' => 'card',
-    'payment_method_types[1]' => 'paypal',
     // Shared Stripe account with VistecPrints — force the card statement to read NOBANTEES, not the account default
     'payment_intent_data[statement_descriptor]' => 'NOBANTEES',
 ];
