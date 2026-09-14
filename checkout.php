@@ -19,12 +19,12 @@ if (!$input || empty($input['items'])) {
 
 $items = $input['items'];
 
-// Mirror cart.html's shipping logic: free over $100, otherwise $8.99 flat
+// Mirror cart.html's shipping logic: free over $100, otherwise $4.99 flat
 $subtotal = 0;
 foreach ($items as $item) {
     $subtotal += floatval($item['price'] ?? 0) * max(1, intval($item['quantity'] ?? 1));
 }
-$shipping = $subtotal >= 100 ? 0 : 8.99;
+$shipping = $subtotal >= 100 ? 0 : 4.99;
 
 // Build Stripe line_items as form-encoded fields
 $post_fields = [
