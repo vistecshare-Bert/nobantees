@@ -73,6 +73,8 @@ function orderStatusColor($s) {
     .table-row:hover{background:#1a1a1a;}
     .order-id{font-weight:600;font-size:13px;}
     .order-date{font-size:11px;color:#555;margin-top:2px;}
+    .order-ship{font-size:11px;color:#777;margin-top:6px;line-height:1.5;}
+    .order-ship b{color:#999;}
     .order-items{font-size:12px;color:#888;line-height:1.5;}
     .price{font-weight:600;font-size:14px;}
     select.status-select{background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;padding:6px 10px;font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;}
@@ -170,6 +172,13 @@ function orderStatusColor($s) {
             <div class="order-id"><?= htmlspecialchars($o['orderId'] ?? '') ?></div>
             <div class="order-date"><?= htmlspecialchars(($o['customer']['email'] ?? '')) ?></div>
             <div class="order-date"><?= date('M j, Y g:ia', strtotime($o['date'] ?? 'now')) ?></div>
+            <?php $ship = $o['shippingAddress'] ?? null; if ($ship): ?>
+            <div class="order-ship">
+              <b>Ship to:</b> <?= htmlspecialchars($ship['name'] ?? '') ?><br>
+              <?= htmlspecialchars($ship['line1'] ?? '') ?><?= !empty($ship['line2']) ? ', ' . htmlspecialchars($ship['line2']) : '' ?><br>
+              <?= htmlspecialchars(trim(($ship['city'] ?? '') . ', ' . ($ship['state'] ?? '') . ' ' . ($ship['postal_code'] ?? ''), ' ,')) ?>
+            </div>
+            <?php endif; ?>
           </div>
           <div class="order-items">
             <?php foreach (($o['items'] ?? []) as $it): ?>

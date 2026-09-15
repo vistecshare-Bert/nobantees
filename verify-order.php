@@ -32,9 +32,24 @@ if ($isPaid && !empty($order) && ($order['status'] ?? '') === 'pending_payment')
     $stripeEmail = $session['customer_details']['email'] ?? '';
     $stripeName  = $session['customer_details']['name']  ?? '';
 
+    // Stripe moved this from the older `shipping` field to `shipping_details` —
+    // check both so this keeps working regardless of API version.
+    $shippingInfo = $session['shipping_details'] ?? $session['shipping'] ?? null;
+    $shippingAddr = $shippingInfo['address'] ?? null;
+    $shipping = $shippingAddr ? [
+        'name'        => $shippingInfo['name'] ?? $stripeName,
+        'line1'       => $shippingAddr['line1']       ?? '',
+        'line2'       => $shippingAddr['line2']       ?? '',
+        'city'        => $shippingAddr['city']        ?? '',
+        'state'       => $shippingAddr['state']       ?? '',
+        'postal_code' => $shippingAddr['postal_code'] ?? '',
+        'country'     => $shippingAddr['country']     ?? '',
+    ] : null;
+
     $order['status']       = 'pending';
     $order['paidAt']       = date('c');
     $order['customer']     = ['email' => $stripeEmail, 'name' => $stripeName];
+    $order['shippingAddress'] = $shipping;
 
     $ordersFile = __DIR__ . '/orders.json';
     $orders = file_exists($ordersFile) ? (json_decode(file_get_contents($ordersFile), true) ?: []) : [];
@@ -59,6 +74,20 @@ if ($isPaid && !empty($order) && ($order['status'] ?? '') === 'pending_payment')
         }
         $orderTotal = number_format(floatval($order['total'] ?? 0), 2);
 
+        $shipHtml = '';
+        if ($shipping) {
+            $shipLines = array_filter([
+                htmlspecialchars($shipping['name']),
+                htmlspecialchars($shipping['line1']),
+                htmlspecialchars($shipping['line2']),
+                htmlspecialchars(trim($shipping['city'] . ', ' . $shipping['state'] . ' ' . $shipping['postal_code'], ' ,')),
+                htmlspecialchars($shipping['country']),
+            ]);
+            $shipHtml = "
+    <p style='color:#888;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;margin:20px 0 6px;'>Shipping To</p>
+    <p style='color:#ccc;font-size:13px;line-height:1.6;margin:0;'>" . implode('<br>', $shipLines) . "</p>";
+        }
+
         $receiptHtml = "<!DOCTYPE html><html><head><meta charset='UTF-8'></head>
 <body style='margin:0;padding:0;background:#0a0a0a;font-family:Arial,sans-serif;'>
 <table width='100%' cellpadding='0' cellspacing='0' style='background:#0a0a0a;padding:40px 20px;'>
@@ -79,7 +108,7 @@ if ($isPaid && !empty($order) && ($order['status'] ?? '') === 'pending_payment')
         <td style='color:#fff;font-size:15px;font-weight:bold;padding-top:10px;border-top:1px solid #333;'>Total Charged</td>
         <td style='color:#dc0000;font-size:15px;font-weight:bold;padding-top:10px;border-top:1px solid #333;text-align:right;'>\${$orderTotal}</td>
       </tr>
-    </table>
+    </table>{$shipHtml}
   </td></tr>
 </table>
 </td></tr></table>
@@ -97,6 +126,14 @@ if ($isPaid && !empty($order) && ($order['status'] ?? '') === 'pending_payment')
     $adminLines = "New order received!\n\nOrder ID: {$order['orderId']}\nEmail: {$stripeEmail}\nTotal: \${$orderTotal}\n\n";
     foreach ($order['items'] ?? [] as $it) {
         $adminLines .= '  - ' . ($it['name'] ?? 'Item') . ' Size ' . ($it['size'] ?? '?') . ' ×' . (int)($it['quantity'] ?? 1) . "\n";
+    }
+    if ($shipping) {
+        $adminLines .= "\nShip To:\n  " . $shipping['name'] . "\n  " . $shipping['line1'];
+        if ($shipping['line2']) $adminLines .= "\n  " . $shipping['line2'];
+        $adminLines .= "\n  " . trim($shipping['city'] . ', ' . $shipping['state'] . ' ' . $shipping['postal_code'], ' ,');
+        $adminLines .= "\n  " . $shipping['country'] . "\n";
+    } else {
+        $adminLines .= "\n(No shipping address collected — digital/local order?)\n";
     }
     $adminLines .= "\nView in dashboard: " . SITE_URL . "/admin/orders.php";
     $aHeaders  = "From: NoBan Tees <noreply@nobantees.com>\r\n";

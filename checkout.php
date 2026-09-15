@@ -35,6 +35,8 @@ $post_fields = [
     'payment_method_types[1]' => 'cashapp',
     // Shared Stripe account with VistecPrints — force the card statement to read NOBANTEES, not the account default
     'payment_intent_data[statement_descriptor]' => 'NOBANTEES',
+    // Collect a shipping address — this is a physical goods store, we need it to fulfill orders
+    'shipping_address_collection[allowed_countries][0]' => 'US',
 ];
 
 foreach ($items as $i => $item) {
