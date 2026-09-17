@@ -1,278 +1,297 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Checkout — NoBan Tees</title>
-  <link rel="stylesheet" href="css/style.css">
-  <script src="https://js.stripe.com/dahlia/stripe.js"></script>
-  <style>
-    body{background:#0a0a0a;color:#fff;margin:0;font-family:'Inter',sans-serif;}
-    .navbar{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;background:#0a0a0a;border-bottom:1px solid #222;}
-    .checkout-wrap{max-width:960px;margin:0 auto;padding:48px 24px 100px;display:grid;grid-template-columns:1fr 380px;gap:48px;}
-    @media (max-width:800px){.checkout-wrap{grid-template-columns:1fr;padding:32px 20px 80px;}}
-    h1{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;margin:0 0 28px;grid-column:1/-1;}
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Checkout — NoBan Tees</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0a0a0a;color:#fff;font-family:'Inter',sans-serif;min-height:100vh;}
+nav{position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.97);border-bottom:1px solid #222;padding:0 5%;}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px;}
+.logo{text-decoration:none;display:flex;align-items:center;}
+.logo img{height:36px;width:auto;display:block;}
+.nav-back{color:#888;text-decoration:none;font-size:13px;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:8px;transition:color 0.2s;}
+.nav-back:hover{color:#dc0000;}
 
-    .pay-section{order:1;min-width:0;}
-    .summary-section{order:2;}
-    @media (max-width:800px){.summary-section{order:0;}}
+.checkout-wrap{max-width:1100px;margin:0 auto;padding:48px 5% 100px;display:grid;grid-template-columns:1fr 420px;gap:48px;align-items:start;}
+@media(max-width:860px){.checkout-wrap{grid-template-columns:1fr;padding:32px 5% 80px;gap:32px;}}
 
-    .field-group{margin-bottom:22px;}
-    .field-group label{display:block;font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
-    .field-group input{width:100%;box-sizing:border-box;background:#111;border:1px solid #222;color:#fff;padding:12px 14px;font-size:14px;border-radius:2px;font-family:inherit;}
-    .field-group input:focus{outline:none;border-color:#dc0000;}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,5vw,48px);letter-spacing:2px;color:#fff;margin-bottom:6px;}
+.page-sub{font-size:13px;color:#888;margin-bottom:32px;}
 
-    .pay-block{background:#111;border:1px solid #222;border-radius:4px;padding:20px;margin-bottom:20px;box-sizing:border-box;}
-    #express-checkout-element,#cashapp-payment-element,#shipping-address-element{width:100%;min-width:0;}
-    .pay-block-title{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
-    .pay-divider{display:flex;align-items:center;gap:12px;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:24px 0;}
-    .pay-divider::before,.pay-divider::after{content:'';flex:1;height:1px;background:#222;}
+.form-section{margin-bottom:28px;}
+.form-section-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:#dc0000;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #222;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.form-row.full{grid-template-columns:1fr;}
+@media(max-width:500px){.form-row{grid-template-columns:1fr;}}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#888;}
+.field input,.field select,.field textarea{background:#111;border:1px solid #222;color:#fff;padding:12px 14px;border-radius:3px;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s;width:100%;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#dc0000;}
+.field input::placeholder,.field textarea::placeholder{color:#555;}
+.field select option{background:#1a1a1a;}
+.field-note{font-size:11px;color:#888;margin-top:4px;}
 
-    .cashapp-pay-btn{width:100%;background:#00d54b;color:#000;border:none;padding:14px;font-size:14px;font-weight:700;border-radius:4px;cursor:pointer;margin-top:14px;transition:opacity .15s;}
-    .cashapp-pay-btn:disabled{opacity:.4;cursor:not-allowed;}
-    .cashapp-pay-btn:not(:disabled):hover{opacity:.9;}
+.submit-btn{width:100%;background:#dc0000;color:#fff;border:none;padding:16px;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:'Inter',sans-serif;border-radius:3px;transition:background 0.2s;margin-top:6px;}
+.submit-btn:hover{background:#ff2020;}
+.submit-btn:disabled{opacity:0.45;cursor:not-allowed;}
+.secure-note{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;font-size:12px;color:#888;}
+.payment-note{background:#111;border:1px solid #222;border-radius:3px;padding:16px;margin-top:20px;font-size:13px;color:#888;line-height:1.6;}
+.payment-note strong{color:#dc0000;}
 
-    .checkout-error{background:#2a0d0d;border:1px solid #dc0000;color:#ff8080;padding:12px 16px;border-radius:4px;font-size:13px;margin-bottom:20px;display:none;}
-    .checkout-loading{color:#888;font-size:13px;padding:20px 0;}
+.summary-card{background:#111;border:1px solid #222;border-radius:4px;overflow:hidden;position:sticky;top:88px;}
+.summary-head{padding:18px 22px;border-bottom:1px solid #1a1a1a;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:#fff;}
+.summary-items{padding:0 22px;max-height:340px;overflow-y:auto;}
+.summary-items::-webkit-scrollbar{width:4px;}
+.summary-items::-webkit-scrollbar-thumb{background:#222;}
+.s-item{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid #1a1a1a;}
+.s-item:last-child{border-bottom:none;}
+.s-item-img{width:56px;height:56px;background:#1a1a1a;border-radius:2px;overflow:hidden;flex-shrink:0;position:relative;}
+.s-item-img img{width:100%;height:100%;object-fit:cover;}
+.s-item-badge{position:absolute;top:-6px;right:-6px;background:#dc0000;color:#fff;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.s-item-info{flex:1;min-width:0;}
+.s-item-name{font-size:13px;font-weight:500;color:#fff;margin-bottom:3px;}
+.s-item-meta{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.8px;}
+.s-item-price{font-size:14px;color:#dc0000;font-weight:600;margin-top:4px;}
+.s-item-remove{background:none;border:none;color:#555;cursor:pointer;font-size:18px;line-height:1;padding:2px 0 0 6px;flex-shrink:0;align-self:flex-start;transition:color 0.15s;}
+.s-item-remove:hover{color:#ff2020;}
+.summary-foot{padding:18px 22px;border-top:1px solid #1a1a1a;}
+.s-line{display:flex;justify-content:space-between;font-size:13px;color:#888;margin-bottom:10px;}
+.s-line.total{font-size:16px;color:#fff;font-weight:600;border-top:1px solid #1a1a1a;padding-top:14px;margin-top:4px;margin-bottom:0;}
+.s-line.total span:last-child{color:#dc0000;}
 
-    .summary-box{background:#111;border:1px solid #222;border-radius:4px;padding:20px;position:sticky;top:24px;}
-    .summary-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #1a1a1a;font-size:13px;}
-    .summary-item img{width:48px;height:48px;object-fit:cover;border-radius:2px;background:#1a1a1a;}
-    .summary-item-info{flex:1;}
-    .summary-item-name{color:#fff;margin-bottom:2px;}
-    .summary-item-meta{color:#777;font-size:11px;}
-    .summary-row{display:flex;justify-content:space-between;padding:10px 0;font-size:13px;color:#ccc;border-bottom:1px solid #1a1a1a;}
-    .summary-row.total{font-weight:700;font-size:16px;color:#fff;border-bottom:none;padding-top:14px;}
-    .back-link{display:inline-block;margin-bottom:20px;color:#888;font-size:13px;text-decoration:none;grid-column:1/-1;}
-    .back-link:hover{color:#fff;}
-  </style>
+.empty-cart-wrap{display:none;max-width:480px;margin:100px auto;text-align:center;padding:0 5%;}
+.back-shop{display:inline-block;background:#dc0000;color:#fff;padding:14px 32px;border-radius:2px;text-decoration:none;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:background 0.2s;}
+.back-shop:hover{background:#ff2020;}
+
+#errorMsg{display:none;background:rgba(220,0,0,0.12);border:1px solid rgba(220,0,0,0.4);border-radius:3px;padding:14px 16px;margin-bottom:12px;font-size:13px;color:#ff8080;line-height:1.5;}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 </head>
 <body>
 
-<nav class="navbar">
-  <a href="index.html" class="nav-logo">
-    <img src="images/no-ban-logo.png" alt="NoBan Tees" class="logo-img">
-  </a>
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo"><img src="images/no-ban-logo.png" alt="NoBan Tees"/></a>
+    <a href="cart.html" class="nav-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Cart
+    </a>
+  </div>
 </nav>
 
-<div class="checkout-wrap">
-  <a href="cart.html" class="back-link">&larr; Back to Cart</a>
-  <h1>Checkout</h1>
+<!-- EMPTY CART -->
+<div class="empty-cart-wrap" id="emptyWrap">
+  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(220,0,0,0.3)" stroke-width="1.2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+  <h2 style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:#fff;margin:20px 0 10px;">Your cart is empty</h2>
+  <p style="color:#888;font-size:14px;margin-bottom:28px;">Add some gear before checking out.</p>
+  <a href="shop.html" class="back-shop">Shop Now</a>
+</div>
 
-  <div class="pay-section">
-    <div class="checkout-error" id="checkoutError"></div>
-    <div class="checkout-loading" id="checkoutLoading">Loading checkout&hellip;</div>
+<!-- MAIN CHECKOUT -->
+<div class="checkout-wrap" id="checkoutWrap" style="display:none;">
+  <div>
+    <h1 class="page-title">Checkout</h1>
+    <p class="page-sub">Fill in your details and we'll process your order.</p>
 
-    <div id="checkoutForm" style="display:none;">
-      <div class="field-group">
-        <label for="emailInput">Email</label>
-        <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email" required>
+    <form id="checkoutForm" onsubmit="submitOrder(event)">
+
+      <div class="form-section">
+        <div class="form-section-title">Contact Information</div>
+        <div class="form-row">
+          <div class="field"><label>First Name *</label><input type="text" id="fFirstName" required placeholder="John"/></div>
+          <div class="field"><label>Last Name *</label><input type="text" id="fLastName" required placeholder="Doe"/></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Email *</label><input type="email" id="fEmail" required placeholder="john@email.com"/></div>
+          <div class="field"><label>Phone *</label><input type="tel" id="fPhone" required placeholder="704-000-0000"/></div>
+        </div>
       </div>
 
-      <div class="pay-block">
-        <div class="pay-block-title">Shipping Address</div>
-        <div id="shipping-address-element"></div>
+      <div class="form-section">
+        <div class="form-section-title">Shipping Address</div>
+        <div class="form-row full">
+          <div class="field"><label>Street Address *</label><input type="text" id="fAddr" required placeholder="123 Main St, Apt 4B"/></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>City *</label><input type="text" id="fCity" required placeholder="Charlotte"/></div>
+          <div class="field"><label>State *</label>
+            <select id="fState" required>
+              <option value="">Select state...</option>
+              <option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option>
+              <option>CO</option><option>CT</option><option>DE</option><option>FL</option><option>GA</option>
+              <option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option>
+              <option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option>
+              <option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option>
+              <option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option>
+              <option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option>
+              <option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option>
+              <option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option>
+              <option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>ZIP Code *</label><input type="text" id="fZip" required placeholder="28201" maxlength="10"/></div>
+          <div class="field"><label>Country</label><input type="text" value="United States" readonly style="opacity:0.5;cursor:not-allowed;"/></div>
+        </div>
       </div>
 
-      <div class="pay-block">
-        <div class="pay-block-title">Pay Instantly</div>
-        <div id="express-checkout-element"></div>
+      <div class="form-section">
+        <div class="form-section-title">Special Instructions</div>
+        <div class="form-row full">
+          <div class="field">
+            <textarea id="fNotes" rows="3" placeholder="Any special requests, size notes, etc."></textarea>
+            <span class="field-note">Optional — tell us anything we should know about your order.</span>
+          </div>
+        </div>
       </div>
 
-      <div class="pay-divider">or</div>
-
-      <div class="pay-block">
-        <div class="pay-block-title">Cash App Pay</div>
-        <div id="cashapp-payment-element"></div>
-        <button type="button" class="cashapp-pay-btn" id="cashappPayBtn" disabled>Pay with Cash App</button>
+      <div id="errorMsg"></div>
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <svg style="display:inline;vertical-align:middle;margin-right:8px;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Pay with Card or Cash App
+      </button>
+      <div class="secure-note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Secured by Stripe &nbsp;·&nbsp; Cards &amp; Cash App Pay accepted
       </div>
-    </div>
+      <div class="payment-note">
+        <strong>Secure online payment</strong> powered by Stripe. You'll be redirected to Stripe's hosted checkout, where you can pay by card or Cash App Pay — we never see your card number.
+      </div>
+
+    </form>
   </div>
 
-  <div class="summary-section">
-    <div class="summary-box" id="summaryBox"></div>
+  <!-- ORDER SUMMARY -->
+  <div class="summary-card">
+    <div class="summary-head">Order Summary</div>
+    <div class="summary-items" id="summaryItems"></div>
+    <div class="summary-foot">
+      <div class="s-line"><span>Subtotal</span><span id="sSubtotal">$0.00</span></div>
+      <div class="s-line"><span>Shipping</span><span id="sShipping">$4.99</span></div>
+      <div class="s-line total"><span>Total</span><span id="sTotal">$0.00</span></div>
+    </div>
   </div>
 </div>
 
 <script src="js/cart.js"></script>
 <script>
-  const cart = getCart();
-  if (cart.length === 0) {
-    window.location.href = 'cart.html';
+const SHIPPING_THRESHOLD = 100;
+const SHIPPING_FLAT = 4.99;
+let cart = getCart();
+
+function currentShipping() {
+  const sub = getCartTotal();
+  return sub >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT;
+}
+
+function init() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('cancelled') === '1') showCancelBanner();
+  if (params.get('payment') === 'failed') showError("That payment didn't go through. Please try again.");
+  if (!cart.length) {
+    document.getElementById('emptyWrap').style.display = 'block';
+    return;
   }
+  document.getElementById('checkoutWrap').style.display = 'grid';
+  renderSummary();
+}
 
-  const subtotal = getCartTotal();
-  const shipping = subtotal >= 100 ? 0 : 4.99;
-  const total = subtotal + shipping;
+function showCancelBanner() {
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;top:64px;left:0;right:0;z-index:200;background:rgba(30,0,0,0.97);border-bottom:1px solid rgba(220,0,0,0.3);padding:14px 5%;text-align:center;font-size:13px;color:#ff8080;';
+  banner.innerHTML = 'Payment cancelled — your cart is still saved. Complete your details below and try again. &nbsp;<button onclick="this.parentNode.remove()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:16px;vertical-align:middle;margin-left:8px;">&times;</button>';
+  document.body.insertBefore(banner, document.body.firstChild);
+  history.replaceState(null, '', location.pathname);
+}
 
-  if (new URLSearchParams(location.search).get('payment') === 'failed') {
-    const err = document.getElementById('checkoutError');
-    err.textContent = 'That payment didn\'t go through. Please try again.';
-    err.style.display = 'block';
+function renderSummary() {
+  const sub = getCartTotal();
+  const ship = currentShipping();
+  document.getElementById('sSubtotal').textContent = '$' + sub.toFixed(2);
+  document.getElementById('sShipping').textContent = ship === 0 ? 'FREE' : '$' + ship.toFixed(2);
+  document.getElementById('sTotal').textContent    = '$' + (sub + ship).toFixed(2);
+  document.getElementById('summaryItems').innerHTML = cart.map((item, idx) => `
+    <div class="s-item">
+      <div class="s-item-img">
+        ${item.image ? `<img src="${item.image}" alt="${item.name}" onerror="this.style.display='none'"/>` : ''}
+        <span class="s-item-badge">${item.quantity}</span>
+      </div>
+      <div class="s-item-info">
+        <div class="s-item-name">${item.name}</div>
+        <div class="s-item-meta">Size: ${item.size} · ${item.category}</div>
+        <div class="s-item-price">$${(item.price * item.quantity).toFixed(2)}</div>
+      </div>
+      <button type="button" class="s-item-remove" onclick="removeItem(${idx})" title="Remove item">&#215;</button>
+    </div>`).join('');
+}
+
+function removeItem(idx) {
+  const key = cart[idx].key;
+  removeFromCart(key);
+  cart = getCart();
+  if (!cart.length) {
+    document.getElementById('checkoutWrap').style.display = 'none';
+    document.getElementById('emptyWrap').style.display = 'block';
+    return;
   }
+  renderSummary();
+}
 
-  document.getElementById('summaryBox').innerHTML = `
-    ${cart.map(item => `
-      <div class="summary-item">
-        ${item.image ? `<img src="${item.image}" alt="${item.name}">` : ''}
-        <div class="summary-item-info">
-          <div class="summary-item-name">${item.name}</div>
-          <div class="summary-item-meta">Size: ${item.size} &times; ${item.quantity}</div>
-        </div>
-        <div>$${(item.price * item.quantity).toFixed(2)}</div>
-      </div>`).join('')}
-    <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
-    <div class="summary-row"><span>Shipping</span><span>${shipping === 0 ? 'FREE' : '$' + shipping.toFixed(2)}</span></div>
-    <div class="summary-row total"><span>Total</span><span>$${total.toFixed(2)}</span></div>
-  `;
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
-  function showError(message) {
-    const el = document.getElementById('checkoutError');
-    el.textContent = message;
-    el.style.display = 'block';
-    document.getElementById('checkoutLoading').style.display = 'none';
-  }
+async function submitOrder(e) {
+  e.preventDefault();
+  document.getElementById('errorMsg').style.display = 'none';
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg style="display:inline;vertical-align:middle;margin-right:8px;animation:spin 1s linear infinite;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>Sending…';
 
-  async function initCheckout() {
-    let data;
-    try {
-      const resp = await fetch('checkout.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: cart })
-      });
-      data = await resp.json();
-    } catch (err) {
-      return showError('Could not connect to checkout. Please try again.');
-    }
-
-    if (data.error || !data.walletClientSecret || !data.cashappClientSecret) {
-      return showError(data.error || 'Checkout is unavailable right now. Please try again.');
-    }
-
-    const stripe = Stripe(data.publishableKey);
-
-    document.getElementById('checkoutLoading').style.display = 'none';
-    document.getElementById('checkoutForm').style.display = 'block';
-
-    const emailInput = document.getElementById('emailInput');
-    let shippingAddressComplete = false;
-    let currentShippingAddress = null;
-
-    function syncEmail() {
-      const email = emailInput.value.trim();
-      if (!email) return;
-      if (typeof walletCheckout.updateEmail === 'function') walletCheckout.updateEmail(email).catch(() => {});
-      if (typeof cashappCheckout.updateEmail === 'function') cashappCheckout.updateEmail(email).catch(() => {});
-    }
-    emailInput.addEventListener('blur', syncEmail);
-    emailInput.addEventListener('change', syncEmail);
-
-    function requireShippingAddress() {
-      if (!shippingAddressComplete) {
-        showError('Please enter a complete shipping address before paying.');
-        return false;
+  const payload = {
+    customer: {
+      name:    document.getElementById('fFirstName').value.trim() + ' ' + document.getElementById('fLastName').value.trim(),
+      email:   document.getElementById('fEmail').value.trim(),
+      phone:   document.getElementById('fPhone').value.trim(),
+      address: {
+        line1: document.getElementById('fAddr').value.trim(),
+        city:  document.getElementById('fCity').value.trim(),
+        state: document.getElementById('fState').value,
+        zip:   document.getElementById('fZip').value.trim(),
       }
-      return true;
-    }
+    },
+    notes: document.getElementById('fNotes').value.trim(),
+    items: cart.map(i => ({ name: i.name, size: i.size, price: i.price, quantity: i.quantity, category: i.category })),
+  };
 
-    // Dark theme so form fields (shipping address, Cash App) are legible against this page
-    const elementsOptions = {
-      appearance: {
-        theme: 'night',
-        variables: {
-          colorBackground: '#111111',
-          colorText: '#ffffff',
-          colorTextSecondary: '#888888',
-          colorTextPlaceholder: '#666666',
-          colorBorder: '#222222',
-          colorPrimary: '#dc0000',
-          borderRadius: '2px',
-        },
-      },
-    };
-
-    // Both Checkout Session instances are created up front (synchronously) so
-    // neither's event handlers below ever reference the other before it exists.
-    const walletCheckout  = stripe.initCheckoutElementsSdk({ clientSecret: data.walletClientSecret, elementsOptions });
-    const cashappCheckout = stripe.initCheckoutElementsSdk({ clientSecret: data.cashappClientSecret, elementsOptions });
-    const cashappBtn = document.getElementById('cashappPayBtn');
-    let cashappCanConfirm = false;
-
-    function updateCashappBtnState() {
-      cashappBtn.disabled = !cashappCanConfirm || !emailInput.value.trim() || !shippingAddressComplete;
-    }
-
-    // ── Shipping address: collected once, mirrored onto the Cash App session
-    // below, so it's captured no matter which payment path the customer uses ──
-    const shippingAddressElement = walletCheckout.createShippingAddressElement();
-    shippingAddressElement.mount('#shipping-address-element');
-    walletCheckout.on('change', (event) => {
-      const addr = event && event.value && event.value.address;
-      shippingAddressComplete = !!(event && event.complete && addr);
-      if (shippingAddressComplete) {
-        currentShippingAddress = { name: event.value.name || '', address: addr };
-        if (typeof cashappCheckout.updateShippingAddress === 'function') {
-          cashappCheckout.updateShippingAddress(currentShippingAddress).catch(() => {});
-        }
-      }
-      updateCashappBtnState();
+  try {
+    const res  = await fetch('checkout.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     });
-
-    // ── Wallets: Apple Pay / Google Pay / Link via Express Checkout Element ──
-    const walletActions = await walletCheckout.loadActions();
-    if (walletActions.type === 'success') {
-      const expressCheckoutDiv = document.getElementById('express-checkout-element');
-      const expressCheckoutBlock = expressCheckoutDiv.closest('.pay-block');
-      // The Element renders at an intermediate/incomplete height for a moment after
-      // mounting (per Stripe's docs) — stay hidden until it reports it's actually ready.
-      expressCheckoutBlock.style.visibility = 'hidden';
-
-      const expressCheckoutElement = walletCheckout.createExpressCheckoutElement();
-      expressCheckoutElement.mount('#express-checkout-element');
-      expressCheckoutElement.on('confirm', (event) => {
-        if (!requireShippingAddress()) return;
-        syncEmail();
-        walletActions.actions.confirm({ expressCheckoutConfirmEvent: event }).then((result) => {
-          if (result && result.type === 'error') showError(result.error.message);
-        });
-      });
-      expressCheckoutElement.on('availablepaymentmethodschange', ({ paymentMethods }) => {
-        expressCheckoutBlock.style.visibility = paymentMethods ? 'visible' : 'hidden';
-        expressCheckoutBlock.style.display = paymentMethods ? '' : 'none';
-      });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+      return;
     }
-
-    // ── Cash App Pay via a Payment Element scoped to a cashapp-only session ──
-    const cashappActions = await cashappCheckout.loadActions();
-    if (cashappActions.type === 'success') {
-      const cashappPaymentElement = cashappCheckout.createPaymentElement();
-      cashappPaymentElement.mount('#cashapp-payment-element');
-
-      cashappCheckout.on('change', (session) => {
-        cashappCanConfirm = !!session.canConfirm;
-        updateCashappBtnState();
-      });
-      emailInput.addEventListener('input', updateCashappBtnState);
-
-      cashappBtn.addEventListener('click', async () => {
-        if (!requireShippingAddress()) return;
-        syncEmail();
-        cashappBtn.disabled = true;
-        cashappBtn.textContent = 'Processing…';
-        const result = await cashappActions.actions.confirm();
-        if (result && result.type === 'error') {
-          showError(result.error.message);
-          cashappBtn.disabled = false;
-          cashappBtn.textContent = 'Pay with Cash App';
-        }
-      });
-    } else {
-      cashappBtn.style.display = 'none';
-    }
+    throw new Error(data.error || 'Could not start checkout. Please try again.');
+  } catch (err) {
+    showError(err.message);
+    btn.disabled = false;
+    btn.innerHTML = '<svg style="display:inline;vertical-align:middle;margin-right:8px;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Pay with Card or Cash App';
   }
+}
 
-  initCheckout();
+init();
 </script>
+<script src="js/auth-modal.js"></script>
 </body>
 </html>

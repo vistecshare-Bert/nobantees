@@ -29,26 +29,23 @@ if (file_exists($pendingFile)) {
 }
 
 if ($isPaid && !empty($order) && ($order['status'] ?? '') === 'pending_payment') {
-    $stripeEmail = $session['customer_details']['email'] ?? '';
-    $stripeName  = $session['customer_details']['name']  ?? '';
-
-    // Stripe moved this from the older `shipping` field to `shipping_details` —
-    // check both so this keeps working regardless of API version.
-    $shippingInfo = $session['shipping_details'] ?? $session['shipping'] ?? null;
-    $shippingAddr = $shippingInfo['address'] ?? null;
-    $shipping = $shippingAddr ? [
-        'name'        => $shippingInfo['name'] ?? $stripeName,
-        'line1'       => $shippingAddr['line1']       ?? '',
-        'line2'       => $shippingAddr['line2']       ?? '',
-        'city'        => $shippingAddr['city']        ?? '',
-        'state'       => $shippingAddr['state']       ?? '',
-        'postal_code' => $shippingAddr['postal_code'] ?? '',
-        'country'     => $shippingAddr['country']     ?? '',
+    // Contact + shipping address were collected on our own checkout form (not via
+    // Stripe), so they're read back from the pending order, not the Stripe session.
+    $stripeEmail = $order['customer']['email'] ?? '';
+    $stripeName  = $order['customer']['name']  ?? '';
+    $custAddr    = $order['customer']['address'] ?? [];
+    $shipping = !empty($custAddr['line1']) ? [
+        'name'        => $stripeName,
+        'line1'       => $custAddr['line1'] ?? '',
+        'line2'       => '',
+        'city'        => $custAddr['city']  ?? '',
+        'state'       => $custAddr['state'] ?? '',
+        'postal_code' => $custAddr['zip']   ?? '',
+        'country'     => 'US',
     ] : null;
 
-    $order['status']       = 'pending';
-    $order['paidAt']       = date('c');
-    $order['customer']     = ['email' => $stripeEmail, 'name' => $stripeName];
+    $order['status']          = 'pending';
+    $order['paidAt']          = date('c');
     $order['shippingAddress'] = $shipping;
 
     $ordersFile = __DIR__ . '/orders.json';
@@ -57,25 +54,6 @@ if ($isPaid && !empty($order) && ($order['status'] ?? '') === 'pending_payment')
     file_put_contents($ordersFile, json_encode($orders, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
     @unlink($pendingFile);
-
-    // Checkout now runs two parallel sessions (wallets + Cash App Pay) for the same
-    // order — expire whichever one wasn't used so it can't also be completed later.
-    $siblingId = $order['siblingSessionId'] ?? null;
-    if ($siblingId) {
-        $siblingPendingFile = __DIR__ . '/pending_orders/' . $siblingId . '.json';
-        if (file_exists($siblingPendingFile)) {
-            $ch2 = curl_init('https://api.stripe.com/v1/checkout/sessions/' . urlencode($siblingId) . '/expire');
-            curl_setopt_array($ch2, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST           => true,
-                CURLOPT_USERPWD        => STRIPE_SECRET_KEY . ':',
-                CURLOPT_TIMEOUT        => 10,
-            ]);
-            curl_exec($ch2);
-            curl_close($ch2);
-            @unlink($siblingPendingFile);
-        }
-    }
 
     // ── Receipt email to customer ─────────────────────────────
     if ($stripeEmail) {
@@ -154,6 +132,10 @@ if ($isPaid && !empty($order) && ($order['status'] ?? '') === 'pending_payment')
     } else {
         $adminLines .= "\n(No shipping address collected — digital/local order?)\n";
     }
+    $custPhone = $order['customer']['phone'] ?? '';
+    if ($custPhone) $adminLines .= "\nPhone: {$custPhone}\n";
+    $orderNotes = trim($order['notes'] ?? '');
+    if ($orderNotes) $adminLines .= "\nNotes: {$orderNotes}\n";
     $adminLines .= "\nView in dashboard: " . SITE_URL . "/admin/orders.php";
     $aHeaders  = "From: NoBan Tees <noreply@nobantees.com>\r\n";
     $aHeaders .= "Reply-To: {$stripeEmail}\r\n";
@@ -163,8 +145,8 @@ if ($isPaid && !empty($order) && ($order['status'] ?? '') === 'pending_payment')
 if ($isPaid) {
     header('Location: ' . SITE_URL . '/success.html');
 } else {
-    // Elements-mode checkout can redirect back here on a declined/abandoned
-    // payment too (not just success) — don't show the success page for those.
+    // success_url can still be hit for a session that didn't actually complete
+    // payment (e.g. an async method still processing) — don't show success for those.
     header('Location: ' . SITE_URL . '/checkout.html?payment=failed');
 }
 exit;
