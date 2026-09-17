@@ -69,6 +69,11 @@
       </div>
 
       <div class="pay-block">
+        <div class="pay-block-title">Shipping Address</div>
+        <div id="shipping-address-element"></div>
+      </div>
+
+      <div class="pay-block">
         <div class="pay-block-title">Pay Instantly</div>
         <div id="express-checkout-element"></div>
       </div>
@@ -150,6 +155,9 @@
     document.getElementById('checkoutForm').style.display = 'block';
 
     const emailInput = document.getElementById('emailInput');
+    let shippingAddressComplete = false;
+    let currentShippingAddress = null;
+
     function syncEmail() {
       const email = emailInput.value.trim();
       if (!email) return;
@@ -159,13 +167,48 @@
     emailInput.addEventListener('blur', syncEmail);
     emailInput.addEventListener('change', syncEmail);
 
+    function requireShippingAddress() {
+      if (!shippingAddressComplete) {
+        showError('Please enter a complete shipping address before paying.');
+        return false;
+      }
+      return true;
+    }
+
+    // Both Checkout Session instances are created up front (synchronously) so
+    // neither's event handlers below ever reference the other before it exists.
+    const walletCheckout  = stripe.initCheckoutElementsSdk({ clientSecret: data.walletClientSecret });
+    const cashappCheckout = stripe.initCheckoutElementsSdk({ clientSecret: data.cashappClientSecret });
+    const cashappBtn = document.getElementById('cashappPayBtn');
+    let cashappCanConfirm = false;
+
+    function updateCashappBtnState() {
+      cashappBtn.disabled = !cashappCanConfirm || !emailInput.value.trim() || !shippingAddressComplete;
+    }
+
+    // ── Shipping address: collected once, mirrored onto the Cash App session
+    // below, so it's captured no matter which payment path the customer uses ──
+    const shippingAddressElement = walletCheckout.createShippingAddressElement();
+    shippingAddressElement.mount('#shipping-address-element');
+    walletCheckout.on('change', (event) => {
+      const addr = event && event.value && event.value.address;
+      shippingAddressComplete = !!(event && event.complete && addr);
+      if (shippingAddressComplete) {
+        currentShippingAddress = { name: event.value.name || '', address: addr };
+        if (typeof cashappCheckout.updateShippingAddress === 'function') {
+          cashappCheckout.updateShippingAddress(currentShippingAddress).catch(() => {});
+        }
+      }
+      updateCashappBtnState();
+    });
+
     // ── Wallets: Apple Pay / Google Pay / Link via Express Checkout Element ──
-    const walletCheckout = stripe.initCheckoutElementsSdk({ clientSecret: data.walletClientSecret });
     const walletActions = await walletCheckout.loadActions();
     if (walletActions.type === 'success') {
       const expressCheckoutElement = walletCheckout.createExpressCheckoutElement();
       expressCheckoutElement.mount('#express-checkout-element');
       expressCheckoutElement.on('confirm', (event) => {
+        if (!requireShippingAddress()) return;
         syncEmail();
         walletActions.actions.confirm({ expressCheckoutConfirmEvent: event }).then((result) => {
           if (result && result.type === 'error') showError(result.error.message);
@@ -174,21 +217,19 @@
     }
 
     // ── Cash App Pay via a Payment Element scoped to a cashapp-only session ──
-    const cashappCheckout = stripe.initCheckoutElementsSdk({ clientSecret: data.cashappClientSecret });
     const cashappActions = await cashappCheckout.loadActions();
-    const cashappBtn = document.getElementById('cashappPayBtn');
     if (cashappActions.type === 'success') {
       const cashappPaymentElement = cashappCheckout.createPaymentElement();
       cashappPaymentElement.mount('#cashapp-payment-element');
 
       cashappCheckout.on('change', (session) => {
-        cashappBtn.disabled = !session.canConfirm || !emailInput.value.trim();
+        cashappCanConfirm = !!session.canConfirm;
+        updateCashappBtnState();
       });
-      emailInput.addEventListener('input', () => {
-        cashappBtn.disabled = !emailInput.value.trim();
-      });
+      emailInput.addEventListener('input', updateCashappBtnState);
 
       cashappBtn.addEventListener('click', async () => {
+        if (!requireShippingAddress()) return;
         syncEmail();
         cashappBtn.disabled = true;
         cashappBtn.textContent = 'Processing…';
