@@ -222,6 +222,12 @@
     // ── Wallets: Apple Pay / Google Pay / Link via Express Checkout Element ──
     const walletActions = await walletCheckout.loadActions();
     if (walletActions.type === 'success') {
+      const expressCheckoutDiv = document.getElementById('express-checkout-element');
+      const expressCheckoutBlock = expressCheckoutDiv.closest('.pay-block');
+      // The Element renders at an intermediate/incomplete height for a moment after
+      // mounting (per Stripe's docs) — stay hidden until it reports it's actually ready.
+      expressCheckoutBlock.style.visibility = 'hidden';
+
       const expressCheckoutElement = walletCheckout.createExpressCheckoutElement();
       expressCheckoutElement.mount('#express-checkout-element');
       expressCheckoutElement.on('confirm', (event) => {
@@ -230,6 +236,10 @@
         walletActions.actions.confirm({ expressCheckoutConfirmEvent: event }).then((result) => {
           if (result && result.type === 'error') showError(result.error.message);
         });
+      });
+      expressCheckoutElement.on('availablepaymentmethodschange', ({ paymentMethods }) => {
+        expressCheckoutBlock.style.visibility = paymentMethods ? 'visible' : 'hidden';
+        expressCheckoutBlock.style.display = paymentMethods ? '' : 'none';
       });
     }
 
