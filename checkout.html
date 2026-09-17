@@ -175,10 +175,26 @@
       return true;
     }
 
+    // Dark theme so form fields (shipping address, Cash App) are legible against this page
+    const elementsOptions = {
+      appearance: {
+        theme: 'night',
+        variables: {
+          colorBackground: '#111111',
+          colorText: '#ffffff',
+          colorTextSecondary: '#888888',
+          colorTextPlaceholder: '#666666',
+          colorBorder: '#222222',
+          colorPrimary: '#dc0000',
+          borderRadius: '2px',
+        },
+      },
+    };
+
     // Both Checkout Session instances are created up front (synchronously) so
     // neither's event handlers below ever reference the other before it exists.
-    const walletCheckout  = stripe.initCheckoutElementsSdk({ clientSecret: data.walletClientSecret });
-    const cashappCheckout = stripe.initCheckoutElementsSdk({ clientSecret: data.cashappClientSecret });
+    const walletCheckout  = stripe.initCheckoutElementsSdk({ clientSecret: data.walletClientSecret, elementsOptions });
+    const cashappCheckout = stripe.initCheckoutElementsSdk({ clientSecret: data.cashappClientSecret, elementsOptions });
     const cashappBtn = document.getElementById('cashappPayBtn');
     let cashappCanConfirm = false;
 
