@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — NoBan Tees</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://js.stripe.com/dahlia/stripe.js"></script>
+  <style>
+    body{background:#0a0a0a;color:#fff;margin:0;font-family:'Inter',sans-serif;}
+    .navbar{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;background:#0a0a0a;border-bottom:1px solid #222;}
+    .checkout-wrap{max-width:960px;margin:0 auto;padding:48px 24px 100px;display:grid;grid-template-columns:1fr 380px;gap:48px;}
+    @media (max-width:800px){.checkout-wrap{grid-template-columns:1fr;padding:32px 20px 80px;}}
+    h1{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;margin:0 0 28px;grid-column:1/-1;}
+
+    .pay-section{order:1;}
+    .summary-section{order:2;}
+    @media (max-width:800px){.summary-section{order:0;}}
+
+    .field-group{margin-bottom:22px;}
+    .field-group label{display:block;font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+    .field-group input{width:100%;box-sizing:border-box;background:#111;border:1px solid #222;color:#fff;padding:12px 14px;font-size:14px;border-radius:2px;font-family:inherit;}
+    .field-group input:focus{outline:none;border-color:#dc0000;}
+
+    .pay-block{background:#111;border:1px solid #222;border-radius:4px;padding:20px;margin-bottom:20px;}
+    .pay-block-title{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
+    .pay-divider{display:flex;align-items:center;gap:12px;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:24px 0;}
+    .pay-divider::before,.pay-divider::after{content:'';flex:1;height:1px;background:#222;}
+
+    .cashapp-pay-btn{width:100%;background:#00d54b;color:#000;border:none;padding:14px;font-size:14px;font-weight:700;border-radius:4px;cursor:pointer;margin-top:14px;transition:opacity .15s;}
+    .cashapp-pay-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .cashapp-pay-btn:not(:disabled):hover{opacity:.9;}
+
+    .checkout-error{background:#2a0d0d;border:1px solid #dc0000;color:#ff8080;padding:12px 16px;border-radius:4px;font-size:13px;margin-bottom:20px;display:none;}
+    .checkout-loading{color:#888;font-size:13px;padding:20px 0;}
+
+    .summary-box{background:#111;border:1px solid #222;border-radius:4px;padding:20px;position:sticky;top:24px;}
+    .summary-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #1a1a1a;font-size:13px;}
+    .summary-item img{width:48px;height:48px;object-fit:cover;border-radius:2px;background:#1a1a1a;}
+    .summary-item-info{flex:1;}
+    .summary-item-name{color:#fff;margin-bottom:2px;}
+    .summary-item-meta{color:#777;font-size:11px;}
+    .summary-row{display:flex;justify-content:space-between;padding:10px 0;font-size:13px;color:#ccc;border-bottom:1px solid #1a1a1a;}
+    .summary-row.total{font-weight:700;font-size:16px;color:#fff;border-bottom:none;padding-top:14px;}
+    .back-link{display:inline-block;margin-bottom:20px;color:#888;font-size:13px;text-decoration:none;grid-column:1/-1;}
+    .back-link:hover{color:#fff;}
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <img src="images/no-ban-logo.png" alt="NoBan Tees" class="logo-img">
+  </a>
+</nav>
+
+<div class="checkout-wrap">
+  <a href="cart.html" class="back-link">&larr; Back to Cart</a>
+  <h1>Checkout</h1>
+
+  <div class="pay-section">
+    <div class="checkout-error" id="checkoutError"></div>
+    <div class="checkout-loading" id="checkoutLoading">Loading checkout&hellip;</div>
+
+    <div id="checkoutForm" style="display:none;">
+      <div class="field-group">
+        <label for="emailInput">Email</label>
+        <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+
+      <div class="pay-block">
+        <div class="pay-block-title">Pay Instantly</div>
+        <div id="express-checkout-element"></div>
+      </div>
+
+      <div class="pay-divider">or</div>
+
+      <div class="pay-block">
+        <div class="pay-block-title">Cash App Pay</div>
+        <div id="cashapp-payment-element"></div>
+        <button type="button" class="cashapp-pay-btn" id="cashappPayBtn" disabled>Pay with Cash App</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-section">
+    <div class="summary-box" id="summaryBox"></div>
+  </div>
+</div>
+
+<script src="js/cart.js"></script>
+<script>
+  const cart = getCart();
+  if (cart.length === 0) {
+    window.location.href = 'cart.html';
+  }
+
+  const subtotal = getCartTotal();
+  const shipping = subtotal >= 100 ? 0 : 4.99;
+  const total = subtotal + shipping;
+
+  if (new URLSearchParams(location.search).get('payment') === 'failed') {
+    const err = document.getElementById('checkoutError');
+    err.textContent = 'That payment didn\'t go through. Please try again.';
+    err.style.display = 'block';
+  }
+
+  document.getElementById('summaryBox').innerHTML = `
+    ${cart.map(item => `
+      <div class="summary-item">
+        ${item.image ? `<img src="${item.image}" alt="${item.name}">` : ''}
+        <div class="summary-item-info">
+          <div class="summary-item-name">${item.name}</div>
+          <div class="summary-item-meta">Size: ${item.size} &times; ${item.quantity}</div>
+        </div>
+        <div>$${(item.price * item.quantity).toFixed(2)}</div>
+      </div>`).join('')}
+    <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+    <div class="summary-row"><span>Shipping</span><span>${shipping === 0 ? 'FREE' : '$' + shipping.toFixed(2)}</span></div>
+    <div class="summary-row total"><span>Total</span><span>$${total.toFixed(2)}</span></div>
+  `;
+
+  function showError(message) {
+    const el = document.getElementById('checkoutError');
+    el.textContent = message;
+    el.style.display = 'block';
+    document.getElementById('checkoutLoading').style.display = 'none';
+  }
+
+  async function initCheckout() {
+    let data;
+    try {
+      const resp = await fetch('checkout.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: cart })
+      });
+      data = await resp.json();
+    } catch (err) {
+      return showError('Could not connect to checkout. Please try again.');
+    }
+
+    if (data.error || !data.walletClientSecret || !data.cashappClientSecret) {
+      return showError(data.error || 'Checkout is unavailable right now. Please try again.');
+    }
+
+    const stripe = Stripe(data.publishableKey);
+
+    document.getElementById('checkoutLoading').style.display = 'none';
+    document.getElementById('checkoutForm').style.display = 'block';
+
+    const emailInput = document.getElementById('emailInput');
+    function syncEmail() {
+      const email = emailInput.value.trim();
+      if (!email) return;
+      if (typeof walletCheckout.updateEmail === 'function') walletCheckout.updateEmail(email).catch(() => {});
+      if (typeof cashappCheckout.updateEmail === 'function') cashappCheckout.updateEmail(email).catch(() => {});
+    }
+    emailInput.addEventListener('blur', syncEmail);
+    emailInput.addEventListener('change', syncEmail);
+
+    // ── Wallets: Apple Pay / Google Pay / Link via Express Checkout Element ──
+    const walletCheckout = stripe.initCheckoutElementsSdk({ clientSecret: data.walletClientSecret });
+    const walletActions = await walletCheckout.loadActions();
+    if (walletActions.type === 'success') {
+      const expressCheckoutElement = walletCheckout.createExpressCheckoutElement();
+      expressCheckoutElement.mount('#express-checkout-element');
+      expressCheckoutElement.on('confirm', (event) => {
+        syncEmail();
+        walletActions.actions.confirm({ expressCheckoutConfirmEvent: event }).then((result) => {
+          if (result && result.type === 'error') showError(result.error.message);
+        });
+      });
+    }
+
+    // ── Cash App Pay via a Payment Element scoped to a cashapp-only session ──
+    const cashappCheckout = stripe.initCheckoutElementsSdk({ clientSecret: data.cashappClientSecret });
+    const cashappActions = await cashappCheckout.loadActions();
+    const cashappBtn = document.getElementById('cashappPayBtn');
+    if (cashappActions.type === 'success') {
+      const cashappPaymentElement = cashappCheckout.createPaymentElement();
+      cashappPaymentElement.mount('#cashapp-payment-element');
+
+      cashappCheckout.on('change', (session) => {
+        cashappBtn.disabled = !session.canConfirm || !emailInput.value.trim();
+      });
+      emailInput.addEventListener('input', () => {
+        cashappBtn.disabled = !emailInput.value.trim();
+      });
+
+      cashappBtn.addEventListener('click', async () => {
+        syncEmail();
+        cashappBtn.disabled = true;
+        cashappBtn.textContent = 'Processing…';
+        const result = await cashappActions.actions.confirm();
+        if (result && result.type === 'error') {
+          showError(result.error.message);
+          cashappBtn.disabled = false;
+          cashappBtn.textContent = 'Pay with Cash App';
+        }
+      });
+    } else {
+      cashappBtn.style.display = 'none';
+    }
+  }
+
+  initCheckout();
+</script>
+</body>
+</html>

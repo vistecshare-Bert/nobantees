@@ -58,6 +58,25 @@ if ($isPaid && !empty($order) && ($order['status'] ?? '') === 'pending_payment')
 
     @unlink($pendingFile);
 
+    // Checkout now runs two parallel sessions (wallets + Cash App Pay) for the same
+    // order — expire whichever one wasn't used so it can't also be completed later.
+    $siblingId = $order['siblingSessionId'] ?? null;
+    if ($siblingId) {
+        $siblingPendingFile = __DIR__ . '/pending_orders/' . $siblingId . '.json';
+        if (file_exists($siblingPendingFile)) {
+            $ch2 = curl_init('https://api.stripe.com/v1/checkout/sessions/' . urlencode($siblingId) . '/expire');
+            curl_setopt_array($ch2, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST           => true,
+                CURLOPT_USERPWD        => STRIPE_SECRET_KEY . ':',
+                CURLOPT_TIMEOUT        => 10,
+            ]);
+            curl_exec($ch2);
+            curl_close($ch2);
+            @unlink($siblingPendingFile);
+        }
+    }
+
     // ── Receipt email to customer ─────────────────────────────
     if ($stripeEmail) {
         $itemRows = '';
@@ -141,5 +160,11 @@ if ($isPaid && !empty($order) && ($order['status'] ?? '') === 'pending_payment')
     @mail(NOTIFY_EMAIL, 'New Order — ' . $order['orderId'], $adminLines, $aHeaders);
 }
 
-header('Location: ' . SITE_URL . '/success.html');
+if ($isPaid) {
+    header('Location: ' . SITE_URL . '/success.html');
+} else {
+    // Elements-mode checkout can redirect back here on a declined/abandoned
+    // payment too (not just success) — don't show the success page for those.
+    header('Location: ' . SITE_URL . '/checkout.html?payment=failed');
+}
 exit;

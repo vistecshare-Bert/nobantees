@@ -150,35 +150,10 @@
     renderCart();
   }
 
-  async function startCheckout() {
+  function startCheckout() {
     const cart = getCart();
     if (cart.length === 0) return;
-
-    const btn = document.getElementById('checkoutBtn');
-    btn.disabled = true;
-    btn.textContent = 'Redirecting to payment...';
-
-    try {
-      const response = await fetch('checkout.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: cart })
-      });
-
-      const data = await response.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert('Checkout error: ' + (data.error || 'Please try again.'));
-        btn.disabled = false;
-        btn.textContent = 'Proceed to Checkout';
-      }
-    } catch (err) {
-      alert('Could not connect to checkout. Please try again.');
-      btn.disabled = false;
-      btn.textContent = 'Proceed to Checkout';
-    }
+    window.location.href = 'checkout.html';
   }
 
   renderCart();
