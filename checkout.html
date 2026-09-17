@@ -13,7 +13,7 @@
     @media (max-width:800px){.checkout-wrap{grid-template-columns:1fr;padding:32px 20px 80px;}}
     h1{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;margin:0 0 28px;grid-column:1/-1;}
 
-    .pay-section{order:1;}
+    .pay-section{order:1;min-width:0;}
     .summary-section{order:2;}
     @media (max-width:800px){.summary-section{order:0;}}
 
@@ -22,7 +22,8 @@
     .field-group input{width:100%;box-sizing:border-box;background:#111;border:1px solid #222;color:#fff;padding:12px 14px;font-size:14px;border-radius:2px;font-family:inherit;}
     .field-group input:focus{outline:none;border-color:#dc0000;}
 
-    .pay-block{background:#111;border:1px solid #222;border-radius:4px;padding:20px;margin-bottom:20px;}
+    .pay-block{background:#111;border:1px solid #222;border-radius:4px;padding:20px;margin-bottom:20px;box-sizing:border-box;}
+    #express-checkout-element,#cashapp-payment-element,#shipping-address-element{width:100%;min-width:0;}
     .pay-block-title{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
     .pay-divider{display:flex;align-items:center;gap:12px;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:24px 0;}
     .pay-divider::before,.pay-divider::after{content:'';flex:1;height:1px;background:#222;}
