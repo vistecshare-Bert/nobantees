@@ -14,6 +14,16 @@ if ($id) {
 }
 
 $flash = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
+
+// Categories are derived from whatever's actually on products, so newly
+// added ones (via the "Add New Category" option below) show up here too.
+$categories = [];
+foreach ($products as $p) {
+    if (!empty($p['category'])) $categories[$p['category']] = true;
+}
+foreach (['hoodies', 'shirts', 'pants'] as $cat) $categories[$cat] = true;
+$categories = array_keys($categories);
+sort($categories);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -154,12 +164,15 @@ $flash = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
 
           <div class="form-group">
             <label>Category <span class="required">*</span></label>
-            <select name="category" required>
+            <select id="categorySelect">
               <option value="">— Select —</option>
-              <?php foreach (['hoodies','shirts','pants'] as $cat): ?>
-                <option value="<?= $cat ?>" <?= ($product['category'] ?? '') === $cat ? 'selected' : '' ?>><?= ucfirst($cat) ?></option>
+              <?php foreach ($categories as $cat): ?>
+                <option value="<?= htmlspecialchars($cat) ?>" <?= ($product['category'] ?? '') === $cat ? 'selected' : '' ?>><?= htmlspecialchars(ucfirst($cat)) ?></option>
               <?php endforeach; ?>
+              <option value="__new__">+ Add New Category</option>
             </select>
+            <input type="text" id="categoryNewInput" placeholder="e.g. Hats" style="display:none;margin-top:10px;">
+            <input type="hidden" name="category" id="categoryValue" value="<?= htmlspecialchars($product['category'] ?? '') ?>" required>
           </div>
 
           <div class="form-group">
@@ -234,6 +247,38 @@ $flash = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
   const imageInput = document.getElementById('imageInput');
   let dragFromIndex = null;
 
+  // ── Category select + "Add New Category" ──
+  const categorySelect  = document.getElementById('categorySelect');
+  const categoryNewInput = document.getElementById('categoryNewInput');
+  const categoryValue   = document.getElementById('categoryValue');
+
+  if (categoryValue.value && categorySelect.value !== categoryValue.value) {
+    // Editing a product whose category isn't in the dropdown for some reason —
+    // treat it like a custom category so the value isn't silently lost.
+    categorySelect.value = '__new__';
+  }
+  if (categorySelect.value === '__new__') {
+    categoryNewInput.style.display = '';
+    categoryNewInput.value = categoryValue.value;
+  }
+
+  categorySelect.addEventListener('change', function () {
+    if (categorySelect.value === '__new__') {
+      categoryNewInput.style.display = '';
+      categoryNewInput.value = '';
+      categoryValue.value = '';
+      categoryNewInput.focus();
+    } else {
+      categoryNewInput.style.display = 'none';
+      categoryValue.value = categorySelect.value;
+    }
+  });
+  categoryNewInput.addEventListener('input', function () {
+    // Store as a clean slug (lowercase, dashes) so it works safely in URLs
+    // like shop.html?cat=..., but keep the visible label as typed.
+    categoryValue.value = categoryNewInput.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  });
+
   function thumbSrc(item) {
     return item.type === 'existing' ? `../${item.path}?v=${item.v}` : item.dataUrl;
   }
@@ -307,6 +352,12 @@ $flash = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
+
+    if (!categoryValue.value) {
+      alert('Please select a category, or add a new one.');
+      categorySelect.focus();
+      return;
+    }
 
     // Rebuild the file input to contain only the "new" files, in their current order
     const dt = new DataTransfer();

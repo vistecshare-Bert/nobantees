@@ -96,12 +96,22 @@ function regenerateJs($products) {
 }
 
 function generateId($category, $products) {
-    $prefix = $category === 'hoodies' ? 'h' : ($category === 'shirts' ? 's' : 'p');
+    // Keep the original single-letter prefixes for the three built-in categories
+    // (existing IDs like h1, s1, p1 already depend on this); any custom category
+    // added via "Add New Category" gets a short prefix derived from its own name.
+    $known = ['hoodies' => 'h', 'shirts' => 's', 'pants' => 'p'];
+    if (isset($known[$category])) {
+        $prefix = $known[$category];
+    } else {
+        $prefix = strtolower(preg_replace('/[^a-z0-9]/i', '', substr($category, 0, 3)));
+        if ($prefix === '') $prefix = 'x';
+    }
+    // Scope the increment to products actually in this category (not just ID
+    // prefix), so a new category can never collide with an unrelated one.
     $max = 0;
     foreach ($products as $p) {
-        if (isset($p['id']) && strpos($p['id'], $prefix) === 0) {
-            $n = intval(substr($p['id'], 1));
-            if ($n > $max) $max = $n;
+        if (($p['category'] ?? '') === $category && isset($p['id']) && preg_match('/(\d+)$/', $p['id'], $m)) {
+            $max = max($max, (int)$m[1]);
         }
     }
     return $prefix . ($max + 1);
