@@ -206,7 +206,7 @@ foreach ($products as $p) { if (isset($counts[$p['category']])) $counts[$p['cate
           </div>
           <div><span class="cat-badge <?= htmlspecialchars($p['category']) ?>"><?= htmlspecialchars($p['category']) ?></span></div>
           <div class="price">$<?= number_format($p['price'], 2) ?></div>
-          <div style="font-size:13px;color:#777;"><?= htmlspecialchars($p['color'] ?? '') ?></div>
+          <div style="font-size:13px;color:#777;"><?= htmlspecialchars(implode(', ', $p['colors'] ?? [])) ?></div>
           <div class="actions">
             <a href="edit.php?id=<?= htmlspecialchars($p['id']) ?>" class="btn-edit">Edit</a>
             <form method="POST" action="delete.php" onsubmit="return confirm('Delete <?= htmlspecialchars(addslashes($p['name'])) ?>?')">

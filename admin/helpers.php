@@ -67,10 +67,14 @@ function loadProducts() {
     if (!file_exists($file)) {
         $defaults = defaultProducts();
         saveProducts($defaults);
-        return array_map('normalizeProductImages', $defaults);
+        return array_map('normalizeProduct', $defaults);
     }
     $products = json_decode(file_get_contents($file), true) ?: [];
-    return array_map('normalizeProductImages', $products);
+    return array_map('normalizeProduct', $products);
+}
+
+function normalizeProduct($product) {
+    return normalizeProductColors(normalizeProductImages($product));
 }
 
 // Migrates the old single `image` field to the `images` array on the fly,
@@ -81,6 +85,16 @@ function normalizeProductImages($product) {
         $product['images'] = !empty($product['image']) ? [$product['image']] : [];
     }
     unset($product['image']);
+    return $product;
+}
+
+// Same idea for `color` (single string) -> `colors` (array) — lets products
+// keep working unchanged until an admin adds more colors via the edit form.
+function normalizeProductColors($product) {
+    if (!isset($product['colors'])) {
+        $product['colors'] = !empty($product['color']) ? [$product['color']] : [];
+    }
+    unset($product['color']);
     return $product;
 }
 

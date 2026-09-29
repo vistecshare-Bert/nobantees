@@ -44,14 +44,25 @@ function makeProductCard(product) {
 
   const badgeHtml = product.badge ? `<span class="product-badge">${product.badge}</span>` : '';
 
+  // One color (or none) is just shown as text — nothing to choose. Two or
+  // more means the customer picks one before they can add it to the cart.
+  const colors = Array.isArray(product.colors) ? product.colors : [];
+  const colorTextHtml = colors.length === 1 ? `<p class="product-color">${colors[0]}</p>` : '';
+  const colorSelectHtml = colors.length > 1 ? `
+        <select class="size-select" id="color-${product.id}">
+          <option value="">— Select Color —</option>
+          ${colors.map(c => `<option value="${c}">${c}</option>`).join('')}
+        </select>` : '';
+
   return `
     <div class="product-card">
       <div class="product-image" data-pid="${product.id}">${badgeHtml}${imgHtml}</div>
       <div class="product-info">
         <p class="product-category">${product.category}</p>
         <h3 class="product-name">${product.name}</h3>
-        <p class="product-color">${product.color}</p>${descHtml}
+        ${colorTextHtml}${descHtml}
         <p class="product-price">$${product.price}.00</p>
+        ${colorSelectHtml}
         <select class="size-select" id="size-${product.id}">
           <option value="">— Select Size —</option>
           ${sizes.map(s => `<option value="${s}">${s}</option>`).join('')}

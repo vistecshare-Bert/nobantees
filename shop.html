@@ -137,10 +137,13 @@
   function handleAddToCart(id) {
     const size = document.getElementById('size-' + id).value;
     if (!size) { showToast('Select a size first', '', true); return; }
-    const ok = addToCart(id, size);
+    const colorSelect = document.getElementById('color-' + id);
+    const color = colorSelect ? colorSelect.value : '';
+    if (colorSelect && !color) { showToast('Select a color first', '', true); return; }
+    const ok = addToCart(id, size, color);
     if (ok) {
       const p = products.find(x => x.id === id);
-      showToast(p.name, 'Size ' + size + ' added to cart');
+      showToast(p.name, 'Size ' + size + (color ? ' · ' + color : '') + ' added to cart');
     }
   }
 

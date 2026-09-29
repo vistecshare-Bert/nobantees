@@ -182,7 +182,7 @@ function orderStatusColor($s) {
           </div>
           <div class="order-items">
             <?php foreach (($o['items'] ?? []) as $it): ?>
-              <?= htmlspecialchars($it['name'] ?? 'Item') ?> (<?= htmlspecialchars($it['size'] ?? '') ?>) &times;<?= (int)($it['quantity'] ?? 1) ?><br>
+              <?= htmlspecialchars($it['name'] ?? 'Item') ?> (<?= htmlspecialchars($it['size'] ?? '') ?><?= !empty($it['color']) ? ', ' . htmlspecialchars($it['color']) : '' ?>) &times;<?= (int)($it['quantity'] ?? 1) ?><br>
             <?php endforeach; ?>
           </div>
           <div class="price">$<?= number_format($o['total'] ?? 0, 2) ?></div>

@@ -61,11 +61,13 @@ if ($isPaid && !empty($order) && ($order['status'] ?? '') === 'pending_payment')
         foreach ($order['items'] ?? [] as $it) {
             $itName  = htmlspecialchars($it['name'] ?? 'Item');
             $itSize  = htmlspecialchars($it['size'] ?? '—');
+            $itColor = htmlspecialchars($it['color'] ?? '');
             $itQty   = (int)($it['quantity'] ?? 1);
             $itPrice = number_format(floatval($it['price'] ?? 0) * $itQty, 2);
+            $itLabel = $itName . ' &mdash; Size ' . $itSize . ($itColor ? ' &mdash; ' . $itColor : '');
             $itemRows .= "
             <tr>
-              <td style='padding:10px 0;border-bottom:1px solid #222;color:#fff;font-size:13px;'>{$itName} &mdash; Size {$itSize}</td>
+              <td style='padding:10px 0;border-bottom:1px solid #222;color:#fff;font-size:13px;'>{$itLabel}</td>
               <td style='padding:10px 0;border-bottom:1px solid #222;color:#dc0000;font-size:13px;text-align:right;'>&times;{$itQty} &nbsp; \${$itPrice}</td>
             </tr>";
         }
@@ -122,7 +124,8 @@ if ($isPaid && !empty($order) && ($order['status'] ?? '') === 'pending_payment')
     $orderTotal = number_format(floatval($order['total'] ?? 0), 2);
     $adminLines = "New order received!\n\nOrder ID: {$order['orderId']}\nEmail: {$stripeEmail}\nTotal: \${$orderTotal}\n\n";
     foreach ($order['items'] ?? [] as $it) {
-        $adminLines .= '  - ' . ($it['name'] ?? 'Item') . ' Size ' . ($it['size'] ?? '?') . ' ×' . (int)($it['quantity'] ?? 1) . "\n";
+        $colorSuffix = !empty($it['color']) ? ' ' . $it['color'] : '';
+        $adminLines .= '  - ' . ($it['name'] ?? 'Item') . ' Size ' . ($it['size'] ?? '?') . $colorSuffix . ' ×' . (int)($it['quantity'] ?? 1) . "\n";
     }
     if ($shipping) {
         $adminLines .= "\nShip To:\n  " . $shipping['name'] . "\n  " . $shipping['line1'];

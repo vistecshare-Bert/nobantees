@@ -231,7 +231,7 @@ function renderSummary() {
       </div>
       <div class="s-item-info">
         <div class="s-item-name">${item.name}</div>
-        <div class="s-item-meta">Size: ${item.size} · ${item.category}</div>
+        <div class="s-item-meta">Size: ${item.size}${item.color ? ' · ' + item.color : ''} · ${item.category}</div>
         <div class="s-item-price">$${(item.price * item.quantity).toFixed(2)}</div>
       </div>
       <button type="button" class="s-item-remove" onclick="removeItem(${idx})" title="Remove item">&#215;</button>
@@ -277,7 +277,7 @@ async function submitOrder(e) {
       }
     },
     notes: document.getElementById('fNotes').value.trim(),
-    items: cart.map(i => ({ name: i.name, size: i.size, price: i.price, quantity: i.quantity, category: i.category })),
+    items: cart.map(i => ({ name: i.name, size: i.size, color: i.color || '', price: i.price, quantity: i.quantity, category: i.category })),
   };
 
   try {

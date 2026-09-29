@@ -181,8 +181,9 @@ sort($categories);
           </div>
 
           <div class="form-group">
-            <label>Color / Colorway</label>
-            <input type="text" name="color" value="<?= htmlspecialchars($product['color'] ?? '') ?>" placeholder="e.g. Black, Washed Red">
+            <label>Available Colors</label>
+            <input type="text" name="colors" value="<?= htmlspecialchars(implode(', ', $product['colors'] ?? [])) ?>" placeholder="e.g. Black, Washed Red, White">
+            <p class="hint">Comma-separated. One color = shown as-is on the product. Two or more = customers pick a color before adding to cart.</p>
           </div>
 
           <div class="form-group">
