@@ -54,15 +54,25 @@ function makeProductCard(product) {
           ${colors.map(c => `<option value="${c}">${c}</option>`).join('')}
         </select>` : '';
 
+  // Same pattern for print style.
+  const printStyles = Array.isArray(product.printStyles) ? product.printStyles : [];
+  const printStyleTextHtml = printStyles.length === 1 ? `<p class="product-color">${printStyles[0]}</p>` : '';
+  const printStyleSelectHtml = printStyles.length > 1 ? `
+        <select class="size-select" id="printStyle-${product.id}">
+          <option value="">— Select Print Style —</option>
+          ${printStyles.map(s => `<option value="${s}">${s}</option>`).join('')}
+        </select>` : '';
+
   return `
     <div class="product-card">
       <div class="product-image" data-pid="${product.id}">${badgeHtml}${imgHtml}</div>
       <div class="product-info">
         <p class="product-category">${product.category}</p>
         <h3 class="product-name">${product.name}</h3>
-        ${colorTextHtml}${descHtml}
+        ${colorTextHtml}${printStyleTextHtml}${descHtml}
         <p class="product-price">$${product.price}.00</p>
         ${colorSelectHtml}
+        ${printStyleSelectHtml}
         <select class="size-select" id="size-${product.id}">
           <option value="">— Select Size —</option>
           ${sizes.map(s => `<option value="${s}">${s}</option>`).join('')}

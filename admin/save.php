@@ -14,6 +14,8 @@ $category = trim($_POST['category'] ?? '');
 $price    = floatval($_POST['price'] ?? 0);
 $colorsRaw = trim($_POST['colors'] ?? '');
 $colors    = $colorsRaw ? array_values(array_filter(array_map('trim', explode(',', $colorsRaw)))) : [];
+$printStylesRaw = trim($_POST['printStyles'] ?? '');
+$printStyles    = $printStylesRaw ? array_values(array_filter(array_map('trim', explode(',', $printStylesRaw)))) : [];
 $desc     = trim($_POST['description'] ?? '');
 $badge    = trim($_POST['badge'] ?? '');
 
@@ -110,6 +112,7 @@ $product = [
     'name'        => $name,
     'price'       => $price,
     'colors'      => $colors,
+    'printStyles' => $printStyles,
     'description' => $desc,
     'badge'       => $badge,
     'images'      => $images,

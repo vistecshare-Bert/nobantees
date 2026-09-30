@@ -110,7 +110,7 @@
         ${item.image ? `<img class="cart-item-img" src="${item.image}" alt="${item.name}">` : `<div class="cart-item-img-placeholder">IMG</div>`}
         <div class="cart-item-details">
           <div class="cart-item-name">${item.name}</div>
-          <div class="cart-item-meta">Size: ${item.size}${item.color ? ' &nbsp;|&nbsp; ' + item.color : ''} &nbsp;|&nbsp; ${item.category}</div>
+          <div class="cart-item-meta">Size: ${item.size}${item.color ? ' &nbsp;|&nbsp; ' + item.color : ''}${item.printStyle ? ' &nbsp;|&nbsp; ' + item.printStyle : ''} &nbsp;|&nbsp; ${item.category}</div>
           <div class="cart-item-price">$${(item.price * item.quantity).toFixed(2)}</div>
         </div>
         <div class="cart-item-controls">

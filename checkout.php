@@ -49,6 +49,7 @@ $post_fields = [
 foreach ($items as $i => $item) {
     $name = htmlspecialchars($item['name']) . ' — Size: ' . htmlspecialchars($item['size']);
     if (!empty($item['color'])) $name .= ' — ' . htmlspecialchars($item['color']);
+    if (!empty($item['printStyle'])) $name .= ' — ' . htmlspecialchars($item['printStyle']);
     $amount = intval(round(floatval($item['price']) * 100)); // cents
     $qty = max(1, intval($item['quantity']));
 

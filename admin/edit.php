@@ -187,6 +187,12 @@ sort($categories);
           </div>
 
           <div class="form-group">
+            <label>Available Print Styles</label>
+            <input type="text" name="printStyles" value="<?= htmlspecialchars(implode(', ', $product['printStyles'] ?? [])) ?>" placeholder="e.g. Screen Print, Embroidery, Puff Print">
+            <p class="hint">Comma-separated. One style = shown as-is on the product. Two or more = customers pick a print style before adding to cart.</p>
+          </div>
+
+          <div class="form-group">
             <label>Badge / Ribbon (optional)</label>
             <input type="text" name="badge" value="<?= htmlspecialchars($product['badge'] ?? '') ?>" placeholder="e.g. SALE, NEW, 20% OFF" maxlength="20">
             <p class="hint">Shown as a tag on the product photo. Leave blank for none.</p>

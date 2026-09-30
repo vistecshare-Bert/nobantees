@@ -171,10 +171,14 @@
     const colorSelect = document.getElementById('color-' + id);
     const color = colorSelect ? colorSelect.value : '';
     if (colorSelect && !color) { showToast('Select a color first', '', true); return; }
-    const ok = addToCart(id, size, color);
+    const printStyleSelect = document.getElementById('printStyle-' + id);
+    const printStyle = printStyleSelect ? printStyleSelect.value : '';
+    if (printStyleSelect && !printStyle) { showToast('Select a print style first', '', true); return; }
+    const ok = addToCart(id, size, color, printStyle);
     if (ok) {
       const p = products.find(x => x.id === id);
-      showToast(p.name, 'Size ' + size + (color ? ' · ' + color : '') + ' added to cart');
+      const extras = [color, printStyle].filter(Boolean).join(' · ');
+      showToast(p.name, 'Size ' + size + (extras ? ' · ' + extras : '') + ' added to cart');
     }
   }
 

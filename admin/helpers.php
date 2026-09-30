@@ -74,7 +74,7 @@ function loadProducts() {
 }
 
 function normalizeProduct($product) {
-    return normalizeProductColors(normalizeProductImages($product));
+    return normalizeProductPrintStyles(normalizeProductColors(normalizeProductImages($product)));
 }
 
 // Migrates the old single `image` field to the `images` array on the fly,
@@ -95,6 +95,15 @@ function normalizeProductColors($product) {
         $product['colors'] = !empty($product['color']) ? [$product['color']] : [];
     }
     unset($product['color']);
+    return $product;
+}
+
+// Print Style is new (no legacy single-value field to migrate from) — just
+// make sure every product has the key so templates don't need isset() checks.
+function normalizeProductPrintStyles($product) {
+    if (!isset($product['printStyles']) || !is_array($product['printStyles'])) {
+        $product['printStyles'] = [];
+    }
     return $product;
 }
 

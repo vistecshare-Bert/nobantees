@@ -9,12 +9,12 @@ function saveCart(cart) {
   updateCartBadge();
 }
 
-function addToCart(productId, size, color) {
+function addToCart(productId, size, color, printStyle) {
   const product = products.find(p => p.id === productId);
   if (!product || !size) return false;
 
   const cart = getCart();
-  const key = productId + '-' + size + (color ? '-' + color : '');
+  const key = productId + '-' + size + (color ? '-' + color : '') + (printStyle ? '-' + printStyle : '');
   const existing = cart.find(item => item.key === key);
 
   if (existing) {
@@ -30,6 +30,7 @@ function addToCart(productId, size, color) {
       image: firstImage,
       size,
       color: color || '',
+      printStyle: printStyle || '',
       quantity: 1
     });
   }
