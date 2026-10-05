@@ -92,30 +92,40 @@ finfo_close($finfo);
 // If the admin reordered/interleaved photos client-side, honor that exact
 // order instead of "existing first, then new" -- falls back to the order
 // built above if JS didn't run (e.g. no photo_order field present at all).
+// photo_colors[] is parallel to photo_order[] -- same index, each entry is
+// the color tag (or '') the admin assigned to that photo in the grid.
+$imageColors = [];
 if (!empty($_POST['photo_order']) && is_array($_POST['photo_order'])) {
+    $tokenColors = $_POST['photo_colors'] ?? [];
     $ordered = [];
-    foreach ($_POST['photo_order'] as $token) {
+    foreach ($_POST['photo_order'] as $i => $token) {
+        $path = null;
         if (strpos($token, 'existing:') === 0) {
-            $path = substr($token, strlen('existing:'));
-            if (in_array($path, $remainingExisting, true)) $ordered[] = $path;
+            $candidate = substr($token, strlen('existing:'));
+            if (in_array($candidate, $remainingExisting, true)) $path = $candidate;
         } elseif (strpos($token, 'new:') === 0) {
             $idx = (int) substr($token, strlen('new:'));
-            if (isset($uploaded[$idx])) $ordered[] = $uploaded[$idx];
+            if (isset($uploaded[$idx])) $path = $uploaded[$idx];
         }
+        if ($path === null) continue;
+        $ordered[] = $path;
+        $color = trim($tokenColors[$i] ?? '');
+        if ($color !== '') $imageColors[$path] = $color;
     }
     if ($ordered) $images = $ordered;
 }
 
 $product = [
-    'id'          => $id,
-    'category'    => $category,
-    'name'        => $name,
-    'price'       => $price,
-    'colors'      => $colors,
-    'printStyles' => $printStyles,
-    'description' => $desc,
-    'badge'       => $badge,
-    'images'      => $images,
+    'id'           => $id,
+    'category'     => $category,
+    'name'         => $name,
+    'price'        => $price,
+    'colors'       => $colors,
+    'printStyles'  => $printStyles,
+    'description'  => $desc,
+    'badge'        => $badge,
+    'images'       => $images,
+    'imageColors'  => $imageColors,
 ];
 
 if ($isNew) {

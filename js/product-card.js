@@ -8,12 +8,21 @@ function imagesFor(product) {
   return [];
 }
 
-function makeProductCard(product) {
-  const imgs = imagesFor(product);
+// Photos tagged (in the admin) for the given color come first, followed by
+// any untagged/general photos. Falls back to the full default set if the
+// chosen color has no tagged photos at all, or no color is selected.
+function imagesForColor(product, color) {
+  const all = imagesFor(product);
+  if (!color || !product.imageColors) return all;
+  const tagged = all.filter(src => product.imageColors[src] === color);
+  if (!tagged.length) return all;
+  const untagged = all.filter(src => !product.imageColors[src]);
+  return [...tagged, ...untagged];
+}
 
-  let imgHtml;
+function buildCarouselHtml(imgs, productId, productName) {
   if (!imgs.length) {
-    imgHtml = `
+    return `
       <div class="product-placeholder">
         <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
           <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -22,21 +31,35 @@ function makeProductCard(product) {
         </svg>
         <span class="placeholder-label">Photo Coming Soon</span>
       </div>`;
-  } else if (imgs.length === 1) {
-    imgHtml = `<img src="${imgs[0]}" alt="${product.name}">`;
-  } else {
-    const slides = imgs.map((src, i) =>
-      `<img class="carousel-slide${i === 0 ? ' active' : ''}" src="${src}" alt="${product.name}" data-i="${i}">`
-    ).join('');
-    const dots = imgs.map((_, i) =>
-      `<button type="button" class="dot${i === 0 ? ' active' : ''}" onclick="gotoCarousel(event,'${product.id}',${i})" aria-label="Photo ${i + 1}"></button>`
-    ).join('');
-    imgHtml = `
-      ${slides}
-      <button type="button" class="carousel-arrow prev" onclick="cycleCarousel(event,'${product.id}',-1)" aria-label="Previous photo">&lsaquo;</button>
-      <button type="button" class="carousel-arrow next" onclick="cycleCarousel(event,'${product.id}',1)" aria-label="Next photo">&rsaquo;</button>
-      <div class="carousel-dots">${dots}</div>`;
   }
+  if (imgs.length === 1) {
+    return `<img src="${imgs[0]}" alt="${productName}">`;
+  }
+  const slides = imgs.map((src, i) =>
+    `<img class="carousel-slide${i === 0 ? ' active' : ''}" src="${src}" alt="${productName}" data-i="${i}">`
+  ).join('');
+  const dots = imgs.map((_, i) =>
+    `<button type="button" class="dot${i === 0 ? ' active' : ''}" onclick="gotoCarousel(event,'${productId}',${i})" aria-label="Photo ${i + 1}"></button>`
+  ).join('');
+  return `
+    ${slides}
+    <button type="button" class="carousel-arrow prev" onclick="cycleCarousel(event,'${productId}',-1)" aria-label="Previous photo">&lsaquo;</button>
+    <button type="button" class="carousel-arrow next" onclick="cycleCarousel(event,'${productId}',1)" aria-label="Next photo">&rsaquo;</button>
+    <div class="carousel-dots">${dots}</div>`;
+}
+
+// Swaps the product card's photo(s) to match a newly selected color.
+function updateCardImages(e, id) {
+  const product = products.find(p => p.id === id);
+  const wrap = document.querySelector(`.product-image[data-pid="${id}"]`);
+  if (!product || !wrap) return;
+  const imgs = imagesForColor(product, e.target.value);
+  const badgeHtml = product.badge ? `<span class="product-badge">${product.badge}</span>` : '';
+  wrap.innerHTML = badgeHtml + buildCarouselHtml(imgs, id, product.name);
+}
+
+function makeProductCard(product) {
+  const imgHtml = buildCarouselHtml(imagesFor(product), product.id, product.name);
 
   const descHtml = product.description ? `
         <p class="product-desc" id="desc-${product.id}">${product.description}</p>
@@ -49,7 +72,7 @@ function makeProductCard(product) {
   const colors = Array.isArray(product.colors) ? product.colors : [];
   const colorTextHtml = colors.length === 1 ? `<p class="product-color">${colors[0]}</p>` : '';
   const colorSelectHtml = colors.length > 1 ? `
-        <select class="size-select" id="color-${product.id}">
+        <select class="size-select" id="color-${product.id}" onchange="updateCardImages(event,'${product.id}')">
           <option value="">— Select Color —</option>
           ${colors.map(c => `<option value="${c}">${c}</option>`).join('')}
         </select>` : '';

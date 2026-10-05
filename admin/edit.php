@@ -74,14 +74,16 @@ sort($categories);
     .upload-label{font-size:14px;color:#555;margin-bottom:4px;}
     .upload-hint{font-size:12px;color:#333;}
     .photo-grid{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;}
-    .photo-thumb{position:relative;width:100px;height:120px;flex-shrink:0;cursor:grab;}
-    .photo-thumb img{width:100%;height:100%;object-fit:cover;border:1px solid #2a2a2a;pointer-events:none;}
+    .photo-thumb{width:100px;flex-shrink:0;cursor:grab;display:flex;flex-direction:column;gap:4px;}
+    .photo-thumb-frame{position:relative;width:100px;height:120px;}
+    .photo-thumb-frame img{width:100%;height:100%;object-fit:cover;border:1px solid #2a2a2a;pointer-events:none;}
     .photo-thumb.dragging{opacity:.35;}
-    .photo-thumb.drag-over{border:2px dashed #dc0000;}
+    .photo-thumb.drag-over .photo-thumb-frame{border:2px dashed #dc0000;}
     .photo-thumb .rm-btn{position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#dc0000;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;transition:background .2s;z-index:2;}
     .photo-thumb .rm-btn:hover{background:#ff2020;}
     .photo-thumb .new-tag{position:absolute;bottom:4px;left:4px;background:rgba(0,200,100,.85);color:#000;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;font-weight:700;}
     .photo-thumb .cover-tag{position:absolute;top:4px;left:4px;background:rgba(220,0,0,.92);color:#fff;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;font-weight:700;}
+    .photo-color-select{width:100px;padding:5px 8px;font-size:11px;background:#0a0a0a;border:1px solid #2a2a2a;color:#ccc;cursor:pointer;}
     /* ACTIONS */
     .form-actions{display:flex;gap:12px;margin-top:8px;}
     .btn-save{background:#dc0000;color:#fff;border:none;padding:14px 40px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;cursor:pointer;transition:background .2s;}
@@ -182,8 +184,8 @@ sort($categories);
 
           <div class="form-group">
             <label>Available Colors</label>
-            <input type="text" name="colors" value="<?= htmlspecialchars(implode(', ', $product['colors'] ?? [])) ?>" placeholder="e.g. Black, Washed Red, White">
-            <p class="hint">Comma-separated. One color = shown as-is on the product. Two or more = customers pick a color before adding to cart.</p>
+            <input type="text" name="colors" id="colorsInput" value="<?= htmlspecialchars(implode(', ', $product['colors'] ?? [])) ?>" placeholder="e.g. Black, Washed Red, White">
+            <p class="hint">Comma-separated. One color = shown as-is on the product. Two or more = customers pick a color before adding to cart. Tag each photo below with a color so the shop page swaps photos when a shopper picks one.</p>
           </div>
 
           <div class="form-group">
@@ -248,11 +250,19 @@ sort($categories);
 <script>
   // photoState is the single source of truth for both existing (already-saved)
   // and newly-selected photos, in the order they'll be saved. Index 0 = cover.
-  let photoState = <?= json_encode(array_map(fn($img) => ['type' => 'existing', 'path' => $img['path'], 'v' => $img['v']], $existing)) ?>;
+  // color is '' (All Colors / untagged) unless the admin assigns one below.
+  const imageColorMap = <?= json_encode($product['imageColors'] ?? []) ?>;
+  let photoState = <?= json_encode(array_map(fn($img) => ['type' => 'existing', 'path' => $img['path'], 'v' => $img['v']], $existing)) ?>
+    .map(p => ({ ...p, color: imageColorMap[p.path] || '' }));
   const originalPaths = photoState.map(p => p.path);
   const form = document.querySelector('form[action="save.php"]');
   const imageInput = document.getElementById('imageInput');
+  const colorsInput = document.getElementById('colorsInput');
   let dragFromIndex = null;
+
+  function currentColorOptions() {
+    return colorsInput.value.split(',').map(c => c.trim()).filter(Boolean);
+  }
 
   // ── Category select + "Add New Category" ──
   const categorySelect  = document.getElementById('categorySelect');
@@ -295,28 +305,33 @@ sort($categories);
     grid.innerHTML = '';
     document.getElementById('dragHint').style.display = photoState.length > 1 ? 'block' : 'none';
 
+    const colorOptions = currentColorOptions();
+
     photoState.forEach((item, i) => {
       const div = document.createElement('div');
       div.className = 'photo-thumb';
       div.draggable = true;
       div.dataset.index = i;
 
+      const frame = document.createElement('div');
+      frame.className = 'photo-thumb-frame';
+
       const img = document.createElement('img');
       img.src = thumbSrc(item);
       img.alt = 'Product photo';
-      div.appendChild(img);
+      frame.appendChild(img);
 
       if (i === 0) {
         const cover = document.createElement('span');
         cover.className = 'cover-tag';
         cover.textContent = 'Cover';
-        div.appendChild(cover);
+        frame.appendChild(cover);
       }
       if (item.type === 'new') {
         const tag = document.createElement('span');
         tag.className = 'new-tag';
         tag.textContent = 'New';
-        div.appendChild(tag);
+        frame.appendChild(tag);
       }
 
       const rm = document.createElement('button');
@@ -325,7 +340,22 @@ sort($categories);
       rm.title = 'Remove photo';
       rm.innerHTML = '&times;';
       rm.onclick = () => { photoState.splice(i, 1); renderPhotoGrid(); };
-      div.appendChild(rm);
+      frame.appendChild(rm);
+
+      div.appendChild(frame);
+
+      // Only worth tagging a photo by color once there are 2+ colors to choose from
+      if (colorOptions.length > 1) {
+        const colorSelect = document.createElement('select');
+        colorSelect.className = 'photo-color-select';
+        colorSelect.draggable = false;
+        colorSelect.title = 'Which color does this photo show?';
+        colorSelect.innerHTML = `<option value="">All Colors</option>` +
+          colorOptions.map(c => `<option value="${c}"${item.color === c ? ' selected' : ''}>${c}</option>`).join('');
+        colorSelect.addEventListener('mousedown', e => e.stopPropagation());
+        colorSelect.addEventListener('change', () => { item.color = colorSelect.value; });
+        div.appendChild(colorSelect);
+      }
 
       div.addEventListener('dragstart', () => { dragFromIndex = i; div.classList.add('dragging'); });
       div.addEventListener('dragend', () => { div.classList.remove('dragging'); });
@@ -349,13 +379,16 @@ sort($categories);
     [...e.target.files].forEach(file => {
       const reader = new FileReader();
       reader.onload = (ev) => {
-        photoState.push({ type: 'new', file, dataUrl: ev.target.result });
+        photoState.push({ type: 'new', file, dataUrl: ev.target.result, color: '' });
         renderPhotoGrid();
       };
       reader.readAsDataURL(file);
     });
     document.querySelector('.upload-label').textContent = 'Click to upload more photos';
   });
+
+  // Re-render so each photo's color dropdown reflects whatever's currently typed
+  colorsInput.addEventListener('input', renderPhotoGrid);
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -371,16 +404,23 @@ sort($categories);
     photoState.filter(p => p.type === 'new').forEach(p => dt.items.add(p.file));
     imageInput.files = dt.files;
 
-    // Record final photo order (existing paths + indices into the new-file list above)
+    // Record final photo order (existing paths + indices into the new-file list above),
+    // plus the color tag for each photo in the same order (photo_colors[i] <-> photo_order[i])
     const orderWrap = document.getElementById('orderInputs');
     orderWrap.innerHTML = '';
     let newIndex = 0;
     photoState.forEach(item => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'photo_order[]';
-      input.value = item.type === 'existing' ? `existing:${item.path}` : `new:${newIndex++}`;
-      orderWrap.appendChild(input);
+      const orderInput = document.createElement('input');
+      orderInput.type = 'hidden';
+      orderInput.name = 'photo_order[]';
+      orderInput.value = item.type === 'existing' ? `existing:${item.path}` : `new:${newIndex++}`;
+      orderWrap.appendChild(orderInput);
+
+      const colorInput = document.createElement('input');
+      colorInput.type = 'hidden';
+      colorInput.name = 'photo_colors[]';
+      colorInput.value = item.color || '';
+      orderWrap.appendChild(colorInput);
     });
 
     // Record which originally-existing photos were removed

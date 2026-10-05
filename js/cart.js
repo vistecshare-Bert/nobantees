@@ -20,7 +20,9 @@ function addToCart(productId, size, color, printStyle) {
   if (existing) {
     existing.quantity += 1;
   } else {
-    const firstImage = (Array.isArray(product.images) && product.images[0]) || product.image || '';
+    // Prefer a photo matching the chosen color, same logic the product card uses
+    const colorImgs = (typeof imagesForColor === 'function') ? imagesForColor(product, color) : null;
+    const firstImage = (colorImgs && colorImgs[0]) || (Array.isArray(product.images) && product.images[0]) || product.image || '';
     cart.push({
       key,
       id: product.id,
