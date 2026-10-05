@@ -190,8 +190,8 @@ sort($categories);
 
           <div class="form-group">
             <label>Available Print Styles</label>
-            <input type="text" name="printStyles" value="<?= htmlspecialchars(implode(', ', $product['printStyles'] ?? [])) ?>" placeholder="e.g. Screen Print, Embroidery, Puff Print">
-            <p class="hint">Comma-separated. One style = shown as-is on the product. Two or more = customers pick a print style before adding to cart.</p>
+            <input type="text" name="printStyles" id="printStylesInput" value="<?= htmlspecialchars(implode(', ', $product['printStyles'] ?? [])) ?>" placeholder="e.g. Screen Print, Embroidery, Puff Print">
+            <p class="hint">Comma-separated. One style = shown as-is on the product. Two or more = customers pick a print style before adding to cart. Tag each photo below with a style so the shop page swaps photos when a shopper picks one.</p>
           </div>
 
           <div class="form-group">
@@ -250,18 +250,23 @@ sort($categories);
 <script>
   // photoState is the single source of truth for both existing (already-saved)
   // and newly-selected photos, in the order they'll be saved. Index 0 = cover.
-  // color is '' (All Colors / untagged) unless the admin assigns one below.
+  // color/printStyle are '' (All / untagged) unless the admin assigns one below.
   const imageColorMap = <?= json_encode($product['imageColors'] ?? []) ?>;
+  const imagePrintStyleMap = <?= json_encode($product['imagePrintStyles'] ?? []) ?>;
   let photoState = <?= json_encode(array_map(fn($img) => ['type' => 'existing', 'path' => $img['path'], 'v' => $img['v']], $existing)) ?>
-    .map(p => ({ ...p, color: imageColorMap[p.path] || '' }));
+    .map(p => ({ ...p, color: imageColorMap[p.path] || '', printStyle: imagePrintStyleMap[p.path] || '' }));
   const originalPaths = photoState.map(p => p.path);
   const form = document.querySelector('form[action="save.php"]');
   const imageInput = document.getElementById('imageInput');
   const colorsInput = document.getElementById('colorsInput');
+  const printStylesInput = document.getElementById('printStylesInput');
   let dragFromIndex = null;
 
   function currentColorOptions() {
     return colorsInput.value.split(',').map(c => c.trim()).filter(Boolean);
+  }
+  function currentPrintStyleOptions() {
+    return printStylesInput.value.split(',').map(s => s.trim()).filter(Boolean);
   }
 
   // ── Category select + "Add New Category" ──
@@ -300,12 +305,25 @@ sort($categories);
     return item.type === 'existing' ? `../${item.path}?v=${item.v}` : item.dataUrl;
   }
 
+  function makeTagSelect(options, allLabel, title, currentValue, onChange) {
+    const select = document.createElement('select');
+    select.className = 'photo-color-select';
+    select.draggable = false;
+    select.title = title;
+    select.innerHTML = `<option value="">${allLabel}</option>` +
+      options.map(o => `<option value="${o}"${currentValue === o ? ' selected' : ''}>${o}</option>`).join('');
+    select.addEventListener('mousedown', e => e.stopPropagation());
+    select.addEventListener('change', () => onChange(select.value));
+    return select;
+  }
+
   function renderPhotoGrid() {
     const grid = document.getElementById('photoGrid');
     grid.innerHTML = '';
     document.getElementById('dragHint').style.display = photoState.length > 1 ? 'block' : 'none';
 
     const colorOptions = currentColorOptions();
+    const printStyleOptions = currentPrintStyleOptions();
 
     photoState.forEach((item, i) => {
       const div = document.createElement('div');
@@ -344,17 +362,18 @@ sort($categories);
 
       div.appendChild(frame);
 
-      // Only worth tagging a photo by color once there are 2+ colors to choose from
+      // Only worth tagging a photo by color/style once there are 2+ options to choose from
       if (colorOptions.length > 1) {
-        const colorSelect = document.createElement('select');
-        colorSelect.className = 'photo-color-select';
-        colorSelect.draggable = false;
-        colorSelect.title = 'Which color does this photo show?';
-        colorSelect.innerHTML = `<option value="">All Colors</option>` +
-          colorOptions.map(c => `<option value="${c}"${item.color === c ? ' selected' : ''}>${c}</option>`).join('');
-        colorSelect.addEventListener('mousedown', e => e.stopPropagation());
-        colorSelect.addEventListener('change', () => { item.color = colorSelect.value; });
-        div.appendChild(colorSelect);
+        div.appendChild(makeTagSelect(
+          colorOptions, 'All Colors', 'Which color does this photo show?',
+          item.color, (v) => { item.color = v; }
+        ));
+      }
+      if (printStyleOptions.length > 1) {
+        div.appendChild(makeTagSelect(
+          printStyleOptions, 'All Print Styles', 'Which print style does this photo show?',
+          item.printStyle, (v) => { item.printStyle = v; }
+        ));
       }
 
       div.addEventListener('dragstart', () => { dragFromIndex = i; div.classList.add('dragging'); });
@@ -379,7 +398,7 @@ sort($categories);
     [...e.target.files].forEach(file => {
       const reader = new FileReader();
       reader.onload = (ev) => {
-        photoState.push({ type: 'new', file, dataUrl: ev.target.result, color: '' });
+        photoState.push({ type: 'new', file, dataUrl: ev.target.result, color: '', printStyle: '' });
         renderPhotoGrid();
       };
       reader.readAsDataURL(file);
@@ -387,8 +406,9 @@ sort($categories);
     document.querySelector('.upload-label').textContent = 'Click to upload more photos';
   });
 
-  // Re-render so each photo's color dropdown reflects whatever's currently typed
+  // Re-render so each photo's dropdowns reflect whatever's currently typed
   colorsInput.addEventListener('input', renderPhotoGrid);
+  printStylesInput.addEventListener('input', renderPhotoGrid);
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -405,7 +425,8 @@ sort($categories);
     imageInput.files = dt.files;
 
     // Record final photo order (existing paths + indices into the new-file list above),
-    // plus the color tag for each photo in the same order (photo_colors[i] <-> photo_order[i])
+    // plus the color/print-style tag for each photo in the same order
+    // (photo_colors[i] / photo_print_styles[i] <-> photo_order[i])
     const orderWrap = document.getElementById('orderInputs');
     orderWrap.innerHTML = '';
     let newIndex = 0;
@@ -421,6 +442,12 @@ sort($categories);
       colorInput.name = 'photo_colors[]';
       colorInput.value = item.color || '';
       orderWrap.appendChild(colorInput);
+
+      const styleInput = document.createElement('input');
+      styleInput.type = 'hidden';
+      styleInput.name = 'photo_print_styles[]';
+      styleInput.value = item.printStyle || '';
+      orderWrap.appendChild(styleInput);
     });
 
     // Record which originally-existing photos were removed

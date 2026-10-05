@@ -92,11 +92,13 @@ finfo_close($finfo);
 // If the admin reordered/interleaved photos client-side, honor that exact
 // order instead of "existing first, then new" -- falls back to the order
 // built above if JS didn't run (e.g. no photo_order field present at all).
-// photo_colors[] is parallel to photo_order[] -- same index, each entry is
-// the color tag (or '') the admin assigned to that photo in the grid.
+// photo_colors[] / photo_print_styles[] are parallel to photo_order[] -- same
+// index, each entry is the tag (or '') the admin assigned to that photo.
 $imageColors = [];
+$imagePrintStyles = [];
 if (!empty($_POST['photo_order']) && is_array($_POST['photo_order'])) {
     $tokenColors = $_POST['photo_colors'] ?? [];
+    $tokenStyles = $_POST['photo_print_styles'] ?? [];
     $ordered = [];
     foreach ($_POST['photo_order'] as $i => $token) {
         $path = null;
@@ -111,21 +113,24 @@ if (!empty($_POST['photo_order']) && is_array($_POST['photo_order'])) {
         $ordered[] = $path;
         $color = trim($tokenColors[$i] ?? '');
         if ($color !== '') $imageColors[$path] = $color;
+        $style = trim($tokenStyles[$i] ?? '');
+        if ($style !== '') $imagePrintStyles[$path] = $style;
     }
     if ($ordered) $images = $ordered;
 }
 
 $product = [
-    'id'           => $id,
-    'category'     => $category,
-    'name'         => $name,
-    'price'        => $price,
-    'colors'       => $colors,
-    'printStyles'  => $printStyles,
-    'description'  => $desc,
-    'badge'        => $badge,
-    'images'       => $images,
-    'imageColors'  => $imageColors,
+    'id'                => $id,
+    'category'          => $category,
+    'name'              => $name,
+    'price'             => $price,
+    'colors'            => $colors,
+    'printStyles'       => $printStyles,
+    'description'       => $desc,
+    'badge'             => $badge,
+    'images'            => $images,
+    'imageColors'       => $imageColors,
+    'imagePrintStyles'  => $imagePrintStyles,
 ];
 
 if ($isNew) {

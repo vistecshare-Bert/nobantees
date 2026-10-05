@@ -8,16 +8,30 @@ function imagesFor(product) {
   return [];
 }
 
-// Photos tagged (in the admin) for the given color come first, followed by
-// any untagged/general photos. Falls back to the full default set if the
-// chosen color has no tagged photos at all, or no color is selected.
-function imagesForColor(product, color) {
+// Filters/orders a product's photos to match the currently selected color
+// and/or print style (either can be blank). A photo tagged for the "wrong"
+// color or style is excluded; among the rest, photos actually tagged to
+// match at least one active selection are shown first, followed by general
+// untagged photos. Falls back to the full default set if nothing matches
+// (e.g. no photo is tagged for that combination) or neither is selected.
+function imagesForSelection(product, color, printStyle) {
   const all = imagesFor(product);
-  if (!color || !product.imageColors) return all;
-  const tagged = all.filter(src => product.imageColors[src] === color);
-  if (!tagged.length) return all;
-  const untagged = all.filter(src => !product.imageColors[src]);
-  return [...tagged, ...untagged];
+  if (!color && !printStyle) return all;
+  const colorMap = product.imageColors || {};
+  const styleMap = product.imagePrintStyles || {};
+
+  const compatible = all.filter(src => {
+    const colorOk = !color || !colorMap[src] || colorMap[src] === color;
+    const styleOk = !printStyle || !styleMap[src] || styleMap[src] === printStyle;
+    return colorOk && styleOk;
+  });
+
+  const tagged = compatible.filter(src =>
+    (color && colorMap[src] === color) || (printStyle && styleMap[src] === printStyle)
+  );
+  const rest = compatible.filter(src => !tagged.includes(src));
+  const ordered = [...tagged, ...rest];
+  return ordered.length ? ordered : all;
 }
 
 function buildCarouselHtml(imgs, productId, productName) {
@@ -48,12 +62,18 @@ function buildCarouselHtml(imgs, productId, productName) {
     <div class="carousel-dots">${dots}</div>`;
 }
 
-// Swaps the product card's photo(s) to match a newly selected color.
+// Swaps the product card's photo(s) to match the currently selected color
+// and/or print style. Reads both selects (whichever exist) so picking either
+// one re-evaluates using both current selections together.
 function updateCardImages(e, id) {
   const product = products.find(p => p.id === id);
   const wrap = document.querySelector(`.product-image[data-pid="${id}"]`);
   if (!product || !wrap) return;
-  const imgs = imagesForColor(product, e.target.value);
+  const colorSelect = document.getElementById(`color-${id}`);
+  const styleSelect = document.getElementById(`printStyle-${id}`);
+  const color = colorSelect ? colorSelect.value : '';
+  const printStyle = styleSelect ? styleSelect.value : '';
+  const imgs = imagesForSelection(product, color, printStyle);
   const badgeHtml = product.badge ? `<span class="product-badge">${product.badge}</span>` : '';
   wrap.innerHTML = badgeHtml + buildCarouselHtml(imgs, id, product.name);
 }
@@ -81,7 +101,7 @@ function makeProductCard(product) {
   const printStyles = Array.isArray(product.printStyles) ? product.printStyles : [];
   const printStyleTextHtml = printStyles.length === 1 ? `<p class="product-color">${printStyles[0]}</p>` : '';
   const printStyleSelectHtml = printStyles.length > 1 ? `
-        <select class="size-select" id="printStyle-${product.id}">
+        <select class="size-select" id="printStyle-${product.id}" onchange="updateCardImages(event,'${product.id}')">
           <option value="">— Select Print Style —</option>
           ${printStyles.map(s => `<option value="${s}">${s}</option>`).join('')}
         </select>` : '';
