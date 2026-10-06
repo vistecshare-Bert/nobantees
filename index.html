@@ -48,13 +48,48 @@
 
 <!-- HERO -->
 <section class="hero">
+  <div class="hero-slides">
+    <img class="hero-slide active" src="images/nobantees-bg.jpg" alt="">
+    <img class="hero-slide" src="images/nobanslide2.jpg" alt="">
+  </div>
+  <div class="hero-gradient"></div>
   <div class="hero-content">
     <p class="hero-eyebrow">New Drop — Street Collection 2025</p>
     <h1 class="hero-title">NO<span>BAN</span>TEES</h1>
     <p class="hero-sub">Hoodies. Shirts. Pants. Built for those who don't follow rules.</p>
     <a href="shop.html" class="btn-primary">Shop Now</a>
   </div>
+  <div class="hero-dots">
+    <button type="button" class="hero-dot active" aria-label="Slide 1"></button>
+    <button type="button" class="hero-dot" aria-label="Slide 2"></button>
+  </div>
 </section>
+
+<script>
+(function () {
+  const slides = document.querySelectorAll('.hero-slide');
+  const dots = document.querySelectorAll('.hero-dot');
+  if (slides.length < 2) return;
+  let current = 0;
+  let timer;
+
+  function showSlide(i) {
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = i;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+  }
+
+  function startTimer() {
+    clearInterval(timer);
+    timer = setInterval(() => showSlide((current + 1) % slides.length), 6000);
+  }
+
+  dots.forEach((dot, i) => dot.addEventListener('click', () => { showSlide(i); startTimer(); }));
+  startTimer();
+})();
+</script>
 
 <!-- SCROLLING BANNER -->
 <div class="banner-strip">
