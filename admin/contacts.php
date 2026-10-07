@@ -1,5 +1,4 @@
 <?php
-ini_set('display_errors','1'); error_reporting(E_ALL); // TEMP-DIAG
 require_once 'auth.php';
 require_once 'helpers.php';
 
@@ -30,11 +29,11 @@ $flash    = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
 $statuses = ['new', 'read', 'replied'];
 
 function contactStatusColor($s) {
-    return match($s) {
-        'replied' => '#4dff9a',
-        'read'    => '#dc0000',
-        default   => '#e8a020',
-    };
+    switch ($s) {
+        case 'replied': return '#4dff9a';
+        case 'read':    return '#dc0000';
+        default:        return '#e8a020';
+    }
 }
 ?>
 <!DOCTYPE html>

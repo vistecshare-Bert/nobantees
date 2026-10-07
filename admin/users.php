@@ -114,7 +114,7 @@ $me = $_SESSION['ban_user']['id'];
     </div>
 
     <?php if ($flash): ?>
-      <?php $cls = str_starts_with($flash, 'Error') ? 'err' : 'ok'; ?>
+      <?php $cls = strpos($flash, 'Error') === 0 ? 'err' : 'ok'; ?>
       <div class="flash <?= $cls ?>"><?= htmlspecialchars($flash) ?></div>
     <?php endif; ?>
 

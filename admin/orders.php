@@ -1,5 +1,4 @@
 <?php
-ini_set('display_errors','1'); error_reporting(E_ALL); // TEMP-DIAG
 require_once 'auth.php';
 require_once 'helpers.php';
 
@@ -30,12 +29,12 @@ $flash  = $_SESSION['flash'] ?? ''; unset($_SESSION['flash']);
 $statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 
 function orderStatusColor($s) {
-    return match($s) {
-        'delivered' => '#4dff9a',
-        'shipped'   => '#dc0000',
-        'cancelled' => '#666',
-        default     => '#e8a020',
-    };
+    switch ($s) {
+        case 'delivered': return '#4dff9a';
+        case 'shipped':   return '#dc0000';
+        case 'cancelled': return '#666';
+        default:          return '#e8a020';
+    }
 }
 ?>
 <!DOCTYPE html>

@@ -15,12 +15,12 @@ if ($user) {
 }
 
 function nbStatusColor($s) {
-    return match($s) {
-        'delivered' => '#4dff9a',
-        'shipped'   => '#dc0000',
-        'cancelled' => '#888',
-        default     => '#e8a020',
-    };
+    switch ($s) {
+        case 'delivered': return '#4dff9a';
+        case 'shipped':   return '#dc0000';
+        case 'cancelled': return '#888';
+        default:          return '#e8a020';
+    }
 }
 ?>
 <!DOCTYPE html>
