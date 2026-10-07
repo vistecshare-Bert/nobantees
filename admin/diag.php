@@ -2,10 +2,17 @@
 // TEMP diagnostic — delete after use.
 header('Content-Type: text/plain');
 
-foreach (['orders.php', 'quotes.php', 'contacts.php', 'dashboard.php', 'helpers.php'] as $f) {
+foreach (['orders.php', 'quotes.php', 'contacts.php'] as $f) {
     echo "=== $f ===\n";
-    $out = [];
-    $code = null;
-    exec('php -l ' . escapeshellarg(__DIR__ . '/' . $f) . ' 2>&1', $out, $code);
-    echo implode("\n", $out) . "\n(exit code: $code)\n\n";
+    try {
+        // Isolate each include in its own function scope so a successful one
+        // (if any) doesn't leak variables/state into the next iteration.
+        (function () use ($f) {
+            include __DIR__ . '/' . $f;
+        })();
+        echo "(included without error -- unexpected given php -l failed it)\n\n";
+    } catch (\Throwable $e) {
+        echo get_class($e) . ': ' . $e->getMessage() . "\n";
+        echo 'at ' . $e->getFile() . ':' . $e->getLine() . "\n\n";
+    }
 }
