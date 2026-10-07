@@ -129,15 +129,24 @@ function generateId($category, $products) {
         $prefix = strtolower(preg_replace('/[^a-z0-9]/i', '', substr($category, 0, 3)));
         if ($prefix === '') $prefix = 'x';
     }
-    // Scope the increment to products actually in this category (not just ID
-    // prefix), so a new category can never collide with an unrelated one.
+    // Scope the starting point to products actually in this category (not just ID
+    // prefix), so a new category's numbering doesn't jump around unnecessarily.
     $max = 0;
     foreach ($products as $p) {
         if (($p['category'] ?? '') === $category && isset($p['id']) && preg_match('/(\d+)$/', $p['id'], $m)) {
             $max = max($max, (int)$m[1]);
         }
     }
-    return $prefix . ($max + 1);
+    // But guarantee the result is unique across ALL products regardless of
+    // category -- two different categories can derive the same prefix (e.g. a
+    // historical bug once let a "caps" product get a "p" id), so a same-category
+    // scan alone isn't enough to rule out a collision.
+    $existingIds = array_column($products, 'id');
+    $n = $max + 1;
+    while (in_array($prefix . $n, $existingIds, true)) {
+        $n++;
+    }
+    return $prefix . $n;
 }
 
 function defaultProducts() {
