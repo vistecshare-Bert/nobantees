@@ -16,10 +16,10 @@ pending_orders/
 quotes/
 contacts/
 
-# Staff-uploaded product photos — live uploads, not tracked in git
-images/hoodies/*
-images/shirts/*
-images/pants/*
+# Staff-uploaded product photos — live uploads, not tracked in git.
+# Applies to every category subfolder (hoodies/shirts/pants/caps/...), current
+# and future, instead of naming each one individually.
+images/*/*
 !images/hoodies/.gitkeep
 !images/shirts/.gitkeep
 !images/pants/.gitkeep

@@ -101,7 +101,14 @@ $excludes = [
     'data/decorated_products.json', 'data/decorated_categories.json',
     'data/users.json', 'users.json', 'orders.json',
     'pending_orders/', 'quotes/', 'contacts/',
-    'images/hoodies/', 'images/shirts/', 'images/pants/',
+    // Every category folder under images/ (hoodies/shirts/pants/caps/...) holds
+    // admin-uploaded product photos, never tracked in git. Excluding the whole
+    // images/*/ level (any immediate subdirectory) instead of naming each
+    // category protects every current AND future category automatically --
+    // naming them individually is exactly what let images/caps/ get wiped by
+    // `rsync --delete` the first time a deploy ran after a caps photo was
+    // uploaded, since nothing told rsync to leave that folder alone.
+    'images/*/',
 ];
 $excludeFlags = implode(' ', array_map(fn($e) => '--exclude=' . escapeshellarg($e), $excludes));
 $cmd = "/usr/bin/rsync -a --delete --chmod=D755,F644 $excludeFlags " . escapeshellarg($src) . ' ' . escapeshellarg($dest . '/') . ' 2>&1';
