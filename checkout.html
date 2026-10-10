@@ -277,7 +277,7 @@ async function submitOrder(e) {
       }
     },
     notes: document.getElementById('fNotes').value.trim(),
-    items: cart.map(i => ({ name: i.name, size: i.size, color: i.color || '', printStyle: i.printStyle || '', price: i.price, quantity: i.quantity, category: i.category })),
+    items: cart.map(i => ({ id: i.id || '', image: i.image || '', name: i.name, size: i.size, color: i.color || '', printStyle: i.printStyle || '', price: i.price, quantity: i.quantity, category: i.category })),
   };
 
   try {
